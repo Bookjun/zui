@@ -2,7 +2,7 @@
  * ZUI: datatable.js
  * http://zui.sexy
  * ========================================================================
- * Copyright (c) 2014 cnezsoft.com; Licensed MIT
+ * Copyright (c) 2014-2016 cnezsoft.com; Licensed MIT
  * ======================================================================== */
 
 
@@ -12,6 +12,12 @@
     var name = 'zui.datatable';
     var store = $.zui.store;
 
+    /**
+     * Datatable class
+     * 
+     * @param object element           DOM element or jquery element
+     * @param object options           Datatable options
+     */
     var DataTable = function(element, options) {
         this.name = name;
         this.$ = $(element);
@@ -42,6 +48,7 @@
         checkByClickRow: true, // change check status by click anywhere on a row
         checkedClass: 'active', // apply CSS class to an checked row
         checkboxName: null,
+        selectable: true,
 
         // Sort options
         sortable: false, // enable sorter
@@ -50,7 +57,7 @@
         storage: true, // enable storage
 
         // fixed header of columns
-        fixedHeader: true, // fixed header
+        fixedHeader: false, // fixed header
         fixedHeaderOffset: 0, // set top offset of header when fixed
         fixedLeftWidth: '30%', // set left width after first render
         fixedRightWidth: '30%', // set right width after first render
@@ -90,6 +97,8 @@
         if($e.hasClass('table-hover') || options.rowHover) {
             options.tableClass += ' table-hover';
         }
+
+        if(!options.checkable || !$.fn.selectable) options.selectable = false;
 
         this.options = options;
     };
@@ -277,8 +286,6 @@
                     'data-type': col.type,
                     style: col.css
                 });
-
-
             $tr.append($th);
         }
 
@@ -342,7 +349,7 @@
 
             $leftRow = $('<tr/>');
             $leftRow.addClass(row.cssClass)
-                .toggleClass(options.checkedClass, row.checked)
+                .toggleClass(options.checkedClass, !!row.checked)
                 .attr({
                     'data-index': r,
                     'data-id': row.id
@@ -463,7 +470,6 @@
         var that = this,
             data = this.data,
             options = this.options,
-            store = $.zui.store,
             $datatable = this.$datatable;
 
         var $dataSpans = that.$dataSpans = $datatable.children('.datatable-head, .datatable-rows').find('.datatable-span');
@@ -570,9 +576,13 @@
                 }
             };
 
-            $bar.draggable(dragOptions);
-            if(options.flexHeadDrag) {
-                $datatable.find('.datatable-head-span.flexarea').draggable(dragOptions);
+            if($.fn.draggable) {
+                $bar.draggable(dragOptions);
+                if(options.flexHeadDrag) {
+                    $datatable.find('.datatable-head-span.flexarea').draggable(dragOptions);
+                }
+            } else {
+                console.error('DataTable requires draggable.js to improve UI.');
             }
 
             $scrollbar.mousedown(function(event) {
@@ -589,7 +599,7 @@
             var syncChecks = function() {
                 var $checkRows = $rowsSpans.first().find('.table > tbody > tr');
                 var $checkedRows = $checkRows.filter('.' + checkedClass);
-                $checkRows.find('.check-row input:checkbox').prop('checked', false);
+                if(options.checkboxName) $checkRows.find('.check-row input:checkbox').prop('checked', false);
                 var checkedStatus = {
                     checkedAll: $checkRows.length === $checkedRows.length && $checkedRows.length > 0,
                     checks: $checkedRows.map(function() {
@@ -600,10 +610,11 @@
                         return rowId;
                     }).toArray()
                 };
+                that.checks = checkedStatus;
                 $.each(data.rows, function(index, value) {
                     value.checked = ($.inArray(value.id, checkedStatus.checks) > -1);
                 });
-                $headSpans.find('.check-all').toggleClass('checked', checkedStatus.checkedAll);
+                $headSpans.find('.check-all').toggleClass('checked', !!checkedStatus.checkedAll);
 
                 if(options.storage) store.pageSet(checkedStatusStoreName, checkedStatus);
 
@@ -612,19 +623,58 @@
                 });
             };
 
-            this.$rowsSpans.on('click', options.checkByClickRow ? 'tr' : '.check-row', function() {
-                $rows.filter('[data-index="' + $(this).closest('tr').data('index') + '"]').toggleClass(checkedClass);
-                syncChecks();
-            });
+            var toggleRowClass = function(ele, toggle) {
+                var $tr = $(ele).closest('tr');
+                if(toggle === undefined) toggle = !$tr.hasClass(checkedClass);
+                $rows.filter('[data-index="' + $tr.data('index') + '"]').toggleClass(checkedClass, !!toggle);
+            };
 
-            var checkAllEventName = 'click.zui.datatable.check-all';
-            this.$datatable.off(checkAllEventName).on(checkAllEventName, '.check-all', function() {
+            var checkEventPrefix = 'click.zui.datatable.check';
+            if(options.selectable) {
+                var selectableOptions = {
+                    selector: '.datatable-rows tr',
+                    trigger: '.datatable-rows',
+                    start: function(e) {
+                        var $checkRow = $(e.target).closest('.check-row, .check-btn');
+                        if($checkRow.length) {
+                            if($checkRow.is('.check-row')) {
+                                toggleRowClass($checkRow);
+                                syncChecks();
+                            }
+                            return false;
+                        }
+                    },
+                    rangeFunc: function(range, targetRange) {
+                        return Math.max(range.top, targetRange.top) < Math.min(range.top + range.height, targetRange.top + targetRange.height);
+                    },
+                    select: function(e) {
+                        toggleRowClass(e.target, true);
+                    },
+                    unselect: function(e) {
+                        toggleRowClass(e.target, false);
+                    },
+                    finish: function(e) {
+                        syncChecks();
+                    }
+                };
+                if($.isPlainObject(options.selectable)) {
+                    $.extend(selectableOptions, options.selectable);
+                }
+                this.$datatable.selectable(selectableOptions);
+            } else {
+                this.$rowsSpans.off(checkEventPrefix).on(checkEventPrefix + 'row', options.checkByClickRow ? 'tr' : '.check-row', function() {
+                    toggleRowClass(this);
+                    syncChecks();
+                });
+            }
+
+            this.$datatable.off(checkEventPrefix).on('click.zui.datatable.check', '.check-all', function() {
                 $rows.toggleClass(checkedClass, $(this).toggleClass('checked').hasClass('checked'));
                 syncChecks();
-            }).on('click', '.check-none', function() {
+            }).on(checkEventPrefix + '.none', '.check-none', function() {
                 $rows.toggleClass(checkedClass, false);
                 syncChecks();
-            }).on('click', '.check-inverse', function() {
+            }).on(checkEventPrefix + '.inverse', '.check-inverse', function() {
                 $rows.toggleClass(checkedClass);
                 syncChecks();
             });
@@ -739,7 +789,6 @@
             return;
         }
 
-
         var data = this.data;
         var cols = data.cols,
             rows = data.rows,
@@ -750,7 +799,7 @@
 
         sortUp = !$th.hasClass('sort-up');
         if(data.keepSort) sortUp = !sortUp;
-        data.keepSort = false;
+        data.keepSort = null;
 
         $headCells.removeClass('sort-up sort-down');
         $th.addClass(sortUp ? 'sort-up' : 'sort-down');
@@ -878,7 +927,7 @@
             if(!data) $this.data(name, (data = new DataTable(this, options)));
 
             if(typeof option == 'string') {
-                if(option === 'load' && $.isPlainObject(newData) && typeof newData.keepSort !== 'boolean') newData.keepSort = true;
+                if(option === 'load' && $.isPlainObject(newData) && (newData.keepSort === undefined || newData.keepSort === null)) newData.keepSort = true;
                 data[option](newData);
             }
         });

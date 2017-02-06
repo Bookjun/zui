@@ -1,12 +1,14 @@
-/*!
- * Chart.js
+/* ========================================================================
+ * Chart.js: Chart.Doughnut.js [Version: 1.0.2]
  * http://chartjs.org/
- * Version: 1.0.2
- *
- * Copyright 2015 Nick Downie
- * Released under the MIT license
+ * 
+ * ZUI: The file has been changed in ZUI. It will not keep update with the
+ * official version in the future.
+ * http://zui.sexy
+ * ========================================================================
+ * Copyright 2015 Nick Downie, Released under the MIT license
  * https://github.com/nnnick/Chart.js/blob/master/LICENSE.md
- */
+ * ======================================================================== */
 
 /// ----- ZUI change begin -----
 /// Add jquery object to namespace
@@ -132,7 +134,7 @@
                 segment.color = color.toCssStr();
                 if(!segment.highlight) segment.highlight = color.lighten(5).toCssStr();
             }
-            /// ----- ZUI change begin -----
+            /// ----- ZUI change end -----
             var index = atIndex || this.segments.length;
             this.segments.splice(index, 0, new this.SegmentArc({
                 id: typeof segment.id === 'undefined' ? index : segment.id,
@@ -148,7 +150,7 @@
                 circumference: (this.options.animateRotate) ? 0 : this.calculateCircumference(segment.value),
                 /// ----- ZUI change begin -----
                 showLabel: segment.showLabel !== false,
-                /// ----- ZUI change begin -----
+                /// ----- ZUI change end -----
                 label: segment.label
             }));
             if(!silent) {
@@ -206,7 +208,7 @@
             var placement = options.scaleLabelPlacement;
             if(placement !== 'inside' && placement !== 'outside') {
                 if((this.chart.width - this.chart.height) > 50) {
-                    if(segment.circumference < (Math.PI / 36)) {
+                    if(segment.circumference < (Math.PI / 18)) {
                         placement = 'outside';
                     }
                 }
@@ -228,7 +230,7 @@
             var chartWidthHalf = this.chart.width / 2;
             var chartHeightHalf = this.chart.height / 2;
 
-            if(placement === 'outside') {
+            if(placement === 'outside') { // outside
                 var isRight = x >= 0;
                 var lineX = x + chartWidthHalf;
                 var lineY = y + chartHeightHalf;
@@ -243,14 +245,16 @@
                 var textHeight = options.scaleFontSize;
                 var labelPos = Math.round((y * 0.8 + chartHeightHalf) / textHeight) + 1;
                 var maxPos = Math.floor(this.chart.width / textHeight) + 1;
-                if(labelPosMap[isRight ? labelPos : (-labelPos)]) {
+                var labelPosDirection = isRight ? 1 : (-1);
+                if(labelPosMap[labelPos*labelPosDirection]) {
                     if(labelPos > 1) labelPos--;
                     else labelPos++;
                 }
-                while(labelPosMap[isRight ? labelPos : (-labelPos)] && labelPos < maxPos) labelPos++;
-                if(labelPosMap[labelPos]) return;
+                // while(labelPosMap[labelPos*labelPosDirection] && labelPos < maxPos) labelPos++;
+
+                if(labelPosMap[labelPos*labelPosDirection]) return;
                 y = (labelPos - 1) * textHeight + options.scaleFontSize / 2;
-                labelPosMap[labelPos] = true;
+                labelPosMap[labelPos*labelPosDirection] = true;
 
                 ctx.beginPath();
                 ctx.moveTo(lineX, lineY);
@@ -261,12 +265,11 @@
                 ctx.strokeWidth = options.scaleLineWidth;
                 ctx.stroke();
                 ctx.fillStyle = segment.fillColor;
-            } else { // outside
-                x = x * 0.6 + chartWidthHalf;
-                y = y * 0.6 + chartHeightHalf;
+            } else { // inside
+                x = x * 0.7 + chartWidthHalf;
+                y = y * 0.7 + chartHeightHalf;
                 ctx.fillStyle = ($.zui && $.zui.Color) ? (new $.zui.Color(segment.fillColor).contrast().toCssStr()) : '#fff';
             }
-
             ctx.fillText(text, x, y);
         },
         // ZUI change end
@@ -293,14 +296,17 @@
                 if(index < this.segments.length - 1) {
                     this.segments[index + 1].startAngle = segment.endAngle;
                 }
-
-                /// ZUI change begin
-                if(this.options.scaleShowLabels && segment.showLabel) {
-                    if(!labelPositionMap) labelPositionMap = {};
-                    this.drawLabel(segment, easeDecimal, labelPositionMap);
-                }
-                /// ZUI change end
             }, this);
+
+            /// ZUI change begin
+            if(this.options.scaleShowLabels) {
+                var segmentsArray = this.segments.slice().sort(function(a,b){return b.value - a.value;});
+                var labelPositionMap = {};
+                helpers.each(segmentsArray, function(segment, index) {
+                    if(segment.showLabel) this.drawLabel(segment, easeDecimal, labelPositionMap);
+                }, this);
+            }
+            /// ZUI change end
         }
     });
 

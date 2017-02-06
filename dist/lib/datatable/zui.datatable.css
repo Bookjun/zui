@@ -1,5 +1,5 @@
 /*!
- * ZUI - v1.3.2 - 2016-01-14
+ * ZUI: 数据表格 - v1.5.0 - 2016-12-08
  * http://zui.sexy
  * GitHub: https://github.com/easysoft/zui.git 
  * Copyright (c) 2016 cnezsoft.com; Licensed MIT
@@ -15,8 +15,11 @@
   margin-bottom: 20px;
   }
 .datatable > .datatable-head {
-  -webkit-transition: box-shadow .2s;
-          transition: box-shadow .2s;
+  -webkit-transition: -webkit-box-shadow .2s;
+       -o-transition:         box-shadow .2s;
+          transition: -webkit-box-shadow .2s;
+          transition:         box-shadow .2s;
+          transition:         box-shadow .2s, -webkit-box-shadow .2s;
   }
 .datatable .table {
   margin: 0;
@@ -29,7 +32,7 @@
 .datatable .table > tbody > tr > td.check-btn,
 .datatable .table > thead > tr > th.check-btn {
   width: 30px;
-  color: #9b9b9b;
+  color: #aaa;
   text-align: center;
   cursor: pointer;
   }
@@ -39,27 +42,28 @@
 .datatable .table > tbody > tr > td.check-btn:hover,
 .datatable .table > thead > tr > th.check-btn.checked,
 .datatable .table > tbody > tr > td.check-btn.checked {
-  color: #4f4f4f;
+  color: #5e5e5e;
   }
 .datatable .table > thead > tr > th.check-btn.checked > .icon-check-empty:before,
 .datatable .table > tbody > tr > td.check-btn.checked > .icon-check-empty:before,
 .datatable .table > tbody > tr.active > td.check-btn > .icon-check-empty:before {
-  content: '\e60d';
+  content: '\e642';
   }
 .datatable .table > thead > tr > th.col-hover {
   background-color: #e2e2e2;
   }
 .datatable .table > tbody > tr > td.col-hover,
 .datatable .table > tbody > tr.hover > td {
-  background-color: #ebf2f9;
+  background-color: #e8eaf6;
   }
 .datatable .table > tbody > tr.active.hover td {
   background-color: #ffdea2;
   }
 .datatable.head-fixed > .datatable-head {
   position: fixed;
-  z-index: 10000;
-  box-shadow: 0 1px 4px 0 rgba(0, 0, 0, .15);
+  z-index: 1030;
+  -webkit-box-shadow: 0 1px 4px 0 rgba(0, 0, 0, .15);
+          box-shadow: 0 1px 4px 0 rgba(0, 0, 0, .15);
   }
 .datatable.sortable .datatable-head-span .table > thead > tr > th {
   overflow: hidden;
@@ -88,11 +92,11 @@
   -moz-osx-font-smoothing: grayscale;
   }
 .datatable.sortable .datatable-head-span .table > thead > tr > th.sort-down:after {
-  color: #145ccd;
+  color: #3949ab;
   content: '\e6b8';
   }
 .datatable.sortable .datatable-head-span .table > thead > tr > th.sort-up:after {
-  color: #145ccd;
+  color: #3949ab;
   content: '\e6b9';
   }
 .datatable.sortable .datatable-head-span .table > thead > tr > th.check-btn:after,
@@ -126,10 +130,12 @@
   bottom: 0;
   display: none;
   width: 20px;
-  box-shadow: 0 0 10px rgba(0, 0, 0, .15);
+  -webkit-box-shadow: 0 0 10px rgba(0, 0, 0, .15);
+          box-shadow: 0 0 10px rgba(0, 0, 0, .15);
   opacity: 0;
-  -webkit-transition: all .5s cubic-bezier(.175, .885, .32, 1);
-          transition: all .5s cubic-bezier(.175, .885, .32, 1);
+  -webkit-transition: all .4s cubic-bezier(.175, .885, .32, 1);
+       -o-transition: all .4s cubic-bezier(.175, .885, .32, 1);
+          transition: all .4s cubic-bezier(.175, .885, .32, 1);
   }
 .datatable-span.flexarea .scrolled-in-shadow {
   left: -30px;
@@ -154,6 +160,7 @@
   border-bottom: none;
   opacity: 0;
   -webkit-transition: opacity .5s, background .3s;
+       -o-transition: opacity .5s, background .3s;
           transition: opacity .5s, background .3s;
   }
 .datatable .scroll-slide > .bar {

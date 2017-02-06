@@ -1,7 +1,8 @@
 /* ========================================================================
- * ZUI: modal.trigger.js v1.2.0
- * http://zui.sexy/docs/javascript.html#modals
- * Licensed under MIT
+ * ZUI: modal.trigger.js [1.2.0+]
+ * http://zui.sexy
+ * ========================================================================
+ * Copyright (c) 2014-2016 cnezsoft.com; Licensed MIT
  * ======================================================================== */
 
 
@@ -119,11 +120,13 @@
 
         $modal.toggleClass('fade', options.fade)
             .addClass(options.cssClass)
-            .toggleClass('modal-md', options.size === 'md')
+            .toggleClass('modal-loading', !this.isShown);
+
+        $dialog.toggleClass('modal-md', options.size === 'md')
             .toggleClass('modal-sm', options.size === 'sm')
             .toggleClass('modal-lg', options.size === 'lg')
-            .toggleClass('modal-fullscreen', options.size === 'fullscreen')
-            .toggleClass('modal-loading', !this.isShown);
+            .toggleClass('modal-fullscreen', options.size === 'fullscreen');
+
         $header.toggle(options.showHeader);
         $header.find('.modal-icon').attr('class', 'modal-icon icon-' + options.icon);
         $header.find('.modal-title-name').html(options.title || '');
@@ -235,11 +238,13 @@
                             $modal.callEvent('loaded' + ZUI_MODAL, {
                                 modalType: 'iframe',
                                 jQuery: frame$
-                            }, that);
+                            }, null);
 
                             setTimeout(ajustFrameSize, 100);
 
                             $framebody.off('resize.' + NAME).on('resize.' + NAME, resizeDialog);
+                        } else {
+                            readyToShow();
                         }
 
                         frame$.extend({

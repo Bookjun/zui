@@ -1,17 +1,17 @@
 /*!
- * ZUI - v1.3.2 - 2016-01-14
+ * ZUI: Lite edition - v1.5.0 - 2016-11-22
  * http://zui.sexy
  * GitHub: https://github.com/easysoft/zui.git 
  * Copyright (c) 2016 cnezsoft.com; Licensed MIT
  */
 
-/* Some code copy from Bootstrap v3.0.0 by @fat and @mdo. (Copyright 2013 Twitter, Inc. Licensed under http://www.apache.org/licenses/)*/
+/*! Some code copy from Bootstrap v3.0.0 by @fat and @mdo. (Copyright 2013 Twitter, Inc. Licensed under http://www.apache.org/licenses/)*/
 
 /* ========================================================================
  * ZUI: jquery.extensions.js
  * http://zui.sexy
  * ========================================================================
- * Copyright (c) 2014 cnezsoft.com; Licensed MIT
+ * Copyright (c) 2014-2016 cnezsoft.com; Licensed MIT
  * ======================================================================== */
 
 
@@ -62,13 +62,8 @@
     $.fn.callEvent = function(name, event, model) {
         var $this = $(this);
         var dotIndex = name.indexOf('.zui.');
-        var shortName = name;
-        if(dotIndex < 0 && model && model.name) {
-            name += '.' + model.name;
-        } else {
-            shortName = name.substring(0, dotIndex);
-        }
-        var e = $.Event(name, event);
+        var shortName = dotIndex < 0 ? name : name.substring(0, dotIndex);
+        var e = $.Event(shortName, event);
 
         if((model === undefined) && dotIndex > 0) {
             model = $this.data(name.substring(dotIndex + 1));
@@ -77,9 +72,10 @@
         if(model && model.options) {
             var func = model.options[shortName];
             if($.isFunction(func)) {
-                $.zui.callEvent(model.options[shortName], e, model);
+                $.zui.callEvent(func, e, model);
             }
         }
+        $this.trigger(e);
         return e;
     };
 }(jQuery, window));
@@ -102,6 +98,10 @@
  * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  * See the License for the specific language governing permissions and
  * limitations under the License.
+ *
+ * ZUI: The file has been changed in ZUI. It will not keep update with the
+ * Bootsrap version in the future.
+ * http://zui.sexy
  * ======================================================================== */
 
 
@@ -187,10 +187,13 @@
 
 }(window.jQuery);
 
-
 /* ========================================================================
  * Bootstrap: transition.js v3.2.0
  * http://getbootstrap.com/javascript/#transitions
+ *  
+ * ZUI: The file has been changed in ZUI. It will not keep update with the
+ * Bootsrap version in the future.
+ * http://zui.sexy
  * ========================================================================
  * Copyright 2011-2014 Twitter, Inc.
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
@@ -258,6 +261,10 @@
 /* ========================================================================
  * Bootstrap: collapse.js v3.0.0
  * http://twbs.github.com/bootstrap/javascript.html#collapse
+ * 
+ * ZUI: The file has been changed in ZUI. It will not keep update with the
+ * Bootsrap version in the future.
+ * http://zui.sexy
  * ========================================================================
  * Copyright 2012 Twitter, Inc.
  *
@@ -308,7 +315,7 @@
         this.$element.trigger(startEvent)
         if(startEvent.isDefaultPrevented()) return
 
-        var actives = this.$parent && this.$parent.find('> .panel > .in')
+        var actives = this.$parent && this.$parent.find('.in')
 
         if(actives && actives.length) {
             var hasData = actives.data(zuiname)
@@ -436,7 +443,7 @@
  * ZUI: device.js
  * http://zui.sexy
  * ========================================================================
- * Copyright (c) 2014 cnezsoft.com; Licensed MIT
+ * Copyright (c) 2014-2016 cnezsoft.com; Licensed MIT
  * ======================================================================== */
 
 
@@ -451,7 +458,8 @@
             tablet: 'screen-tablet',
             phone: 'screen-phone',
             isMobile: 'device-mobile',
-            isDesktop: 'device-desktop'
+            isDesktop: 'device-desktop',
+            touch: 'is-touchable'
         };
 
     var $window = $(window);
@@ -463,6 +471,7 @@
             .toggleClass(cssNames.tablet, width >= tablet && width < desktop)
             .toggleClass(cssNames.phone, width < tablet)
             .toggleClass(cssNames.isMobile, width < desktop)
+            .toggleClass(cssNames.touch, 'ontouchstart' in document.documentElement)
             .toggleClass(cssNames.isDesktop, width >= desktop);
     };
 
@@ -490,11 +499,10 @@
 
     // The browser modal class
     var Browser = function() {
-        var isIE = this.isIE;
-        var ie = isIE();
+        var ie = this.isIE() || this.isIE10() || false;
         if(ie) {
             for(var i = 10; i > 5; i--) {
-                if(isIE(i)) {
+                if(this.isIE(i)) {
                     ie = i;
                     break;
                 }
@@ -524,21 +532,19 @@
     };
 
     // Show browse happy tip
-    Browser.prototype.tip = function() {
-        if(this.ie && this.ie < 8) {
-            var $browseHappy = $('#browseHappyTip');
-            if(!$browseHappy.length) {
-                $browseHappy = $('<div id="browseHappyTip" class="alert alert-dismissable alert-danger alert-block" style="position: relative; z-index: 99999"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button><div class="container"><div class="content text-center"></div></div></div>');
-                $browseHappy.prependTo('body');
-            }
-
-            $browseHappy.find('.content').html(this.browseHappyTip || browseHappyTip[$.zui.clientLang() || 'zh_cn']);
+    Browser.prototype.tip = function(showCoontent) {
+        var $browseHappy = $('#browseHappyTip');
+        if(!$browseHappy.length) {
+            $browseHappy = $('<div id="browseHappyTip" class="alert alert-dismissable alert-danger-inverse alert-block" style="position: relative; z-index: 99999"><button type="button" class="close" data-dismiss="alert" aria-hidden="true">×</button><div class="container"><div class="content text-center"></div></div></div>');
+            $browseHappy.prependTo('body');
         }
+
+        $browseHappy.find('.content').html(showCoontent || this.browseHappyTip || browseHappyTip[$.zui.clientLang() || 'zh_cn']);
     };
 
     // Detect it is IE, can given a version
     Browser.prototype.isIE = function(version) {
-        // var ie = /*@cc_on !@*/false;
+        if(version === 10) return this.isIE10();
         var b = document.createElement('b');
         b.innerHTML = '<!--[if IE ' + (version || '') + ']><i></i><![endif]-->';
         return b.getElementsByTagName('i').length === 1;
@@ -546,7 +552,7 @@
 
     // Detect ie 10 with hack
     Browser.prototype.isIE10 = function() {
-        return( /*@cc_on!@*/ false);
+        return (/*@cc_on!@*/false);
     };
 
     $.zui({
@@ -555,7 +561,9 @@
 
     $(function() {
         if(!$('body').hasClass('disabled-browser-tip')) {
-            $.zui.browser.tip();
+            if($.zui.browser.ie && $.zui.browser.ie < 8) {
+                $.zui.browser.tip();
+            }
         }
     });
 }(jQuery));
@@ -563,6 +571,7 @@
 
 /* ========================================================================
  * ZUI: date.js
+ * Date polyfills
  * http://zui.sexy
  * ========================================================================
  * Copyright (c) 2014 cnezsoft.com; Licensed MIT
@@ -780,31 +789,37 @@
 
 /* ========================================================================
  * ZUI: string.js
+ * String Polyfill.
  * http://zui.sexy
  * ========================================================================
- * Copyright (c) 2014 cnezsoft.com; Licensed MIT
+ * Copyright (c) 2014-2016 cnezsoft.com; Licensed MIT
  * ======================================================================== */
 
 
 (function() {
     'use strict';
 
+    /**
+     * Format string with argument list or object
+     * @param  {object | arguments} args
+     * @return {String}
+     */
     if(!String.prototype.format) {
         String.prototype.format = function(args) {
             var result = this;
             if(arguments.length > 0) {
                 var reg;
-                if(arguments.length == 1 && typeof(args) == "object") {
+                if(arguments.length <= 2 && typeof(args) == 'object') {
                     for(var key in args) {
                         if(args[key] !== undefined) {
-                            reg = new RegExp("({" + key + "})", "g");
+                            reg = new RegExp('(' + (arguments[1] ? arguments[1].replace('0', key) : '{' + key + '}') + ')', 'g');
                             result = result.replace(reg, args[key]);
                         }
                     }
                 } else {
                     for(var i = 0; i < arguments.length; i++) {
                         if(arguments[i] !== undefined) {
-                            reg = new RegExp("({[" + i + "]})", "g");
+                            reg = new RegExp('({[' + i + ']})', 'g');
                             result = result.replace(reg, arguments[i]);
                         }
                     }
@@ -835,13 +850,25 @@
 })();
 
 
-/*!
- * jQuery resize event - v1.1 - 3/14/2010
+/* ========================================================================
+ * Resize: resize.js [Version: 1.1]
  * http://benalman.com/projects/jquery-resize-plugin/
- *
- * Copyright (c) 2010 "Cowboy" Ben Alman
+ *  
+ * ZUI: The file has been changed in ZUI. It will not keep update with the
+ * official version in the future.
+ * http://zui.sexy
+ * ========================================================================
+ * opyright (c) 2010 "Cowboy" Ben Alman
  * Dual licensed under the MIT and GPL licenses.
  * http://benalman.com/about/license/
+ * ======================================================================== */
+
+
+/*!
+ * jQuery resize event - v1.1
+ * http://benalman.com/projects/jquery-resize-plugin/
+ * Copyright (c) 2010 "Cowboy" Ben Alman
+ * MIT & GPL http://benalman.com/about/license/
  */
 
 // Script: jQuery resize event
@@ -1096,7 +1123,7 @@
  * ZUI: storeb.js
  * http://zui.sexy
  * ========================================================================
- * Copyright (c) 2014 cnezsoft.com; Licensed MIT
+ * Copyright (c) 2014-2016 cnezsoft.com; Licensed MIT
  * ======================================================================== */
 
 
@@ -1104,16 +1131,55 @@
     'use strict';
 
     var lsName = 'localStorage';
-    var storage = window[lsName],
-        old = window.store,
+    var storage,
+        dataset,
         pageName = 'page_' + window.location.pathname + window.location.search;
 
     /* The Store object */
     var Store = function() {
         this.slience = true;
-        this.enable = (lsName in window) && window[lsName] && window[lsName].setItem;
+        try {
+            if((lsName in window) && window[lsName] && window[lsName].setItem) {
+                this.enable = true;
+                storage = window[lsName];
+            }
+        } catch(e){}
+        if(!this.enable) {
+            dataset = {};
+            storage = {
+                getLength: function() {
+                    var length = 0;
+                    $.each(dataset, function() {
+                        length++;
+                    });
+                    return length;
+                },
+                key: function(index) {
+                    var key, i = 0;
+                    $.each(dataset, function(k) {
+                        if(i === index) {
+                            key = k;
+                            return false;
+                        }
+                        i++;
+                    });
+                    return key;
+                },
+                removeItem: function(key) {
+                    delete dataset[key];
+                },
+                getItem: function(key) {
+                    return dataset[key];
+                },
+                setItem: function(key, val) {
+                    dataset[key] = val;
+                },
+                clear: function() {
+                    dataset = {};
+                }
+            };
+        }
         this.storage = storage;
-
         this.page = this.get(pageName, {});
     };
 
@@ -1235,7 +1301,8 @@
 
     /* Iterate all items with callback */
     Store.prototype.forEach = function(callback) {
-        for(var i = storage.length - 1; i >= 0; i--) {
+        var length = this.length();
+        for(var i = length - 1; i >= 0; i--) {
             var key = storage.key(i);
             callback(key, this.get(key));
         }
@@ -1277,6 +1344,10 @@
 /* ========================================================================
  * Bootstrap: tab.js v3.0.0
  * http://twbs.github.com/bootstrap/javascript.html#tabs
+ *  
+ * ZUI: The file has been changed in ZUI. It will not keep update with the
+ * Bootsrap version in the future.
+ * http://zui.sexy
  * ========================================================================
  * Copyright 2012 Twitter, Inc.
  *
@@ -1308,7 +1379,7 @@
     Tab.prototype.show = function() {
         var $this = this.element
         var $ul = $this.closest('ul:not(.dropdown-menu)')
-        var selector = $this.attr('data-target')
+        var selector = $this.attr('data-target') || $this.attr('data-tab')
 
         if(!selector) {
             selector = $this.attr('href')
@@ -1403,7 +1474,7 @@
     // TAB DATA-API
     // ============
 
-    $(document).on('click.zui.tab.data-api', '[data-toggle="tab"], [data-toggle="pill"]', function(e) {
+    $(document).on('click.zui.tab.data-api', '[data-toggle="tab"], [data-tab]', function(e) {
         e.preventDefault()
         $(this).tab('show')
     })
@@ -1414,6 +1485,10 @@
 /* ========================================================================
  * Bootstrap: modal.js v3.2.0
  * http://getbootstrap.com/javascript/#modals
+ *
+ * ZUI: The file has been changed in ZUI. It will not keep update with the
+ * Bootsrap version in the future.
+ * http://zui.sexy
  * ========================================================================
  * Copyright 2011-2014 Twitter, Inc.
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE)
@@ -1503,6 +1578,7 @@
     }
 
     Modal.prototype.setMoveale = function() {
+        if(!$.fn.draggable) console.error('Moveable modal requires draggable.js.');
         var that = this;
         var options = that.options;
         var $dialog = that.$element.find('.modal-dialog').removeClass('modal-dragged');
@@ -1787,9 +1863,10 @@
 
 
 /* ========================================================================
- * ZUI: modal.trigger.js v1.2.0
- * http://zui.sexy/docs/javascript.html#modals
- * Licensed under MIT
+ * ZUI: modal.trigger.js [1.2.0+]
+ * http://zui.sexy
+ * ========================================================================
+ * Copyright (c) 2014-2016 cnezsoft.com; Licensed MIT
  * ======================================================================== */
 
 
@@ -1805,9 +1882,10 @@
 
     // MODAL TRIGGER CLASS DEFINITION
     // ======================
-    var ModalTrigger = function(options) {
-        options = $.extend({}, ModalTrigger.DEFAULTS, $.ModalTriggerDefaults, options);
+    var ModalTrigger = function(options, $trigger) {
+        options = $.extend({}, ModalTrigger.DEFAULTS, $.ModalTriggerDefaults, $trigger ? $trigger.data() : null, options);
         this.isShown;
+        this.$trigger = $trigger;
         this.options = options;
         this.id = $.zui.uuid();
 
@@ -1894,7 +1972,7 @@
     };
 
     ModalTrigger.prototype.show = function(option) {
-        var options = $.extend({}, this.options, option);
+        var options = $.extend({}, this.options, {url: this.$trigger ? (this.$trigger.attr('href') || this.$trigger.attr('data-url') || this.$trigger.data('url')) : this.options.url}, option);
         this.init(options);
         var that = this,
             $modal = this.$modal,
@@ -1906,11 +1984,13 @@
 
         $modal.toggleClass('fade', options.fade)
             .addClass(options.cssClass)
-            .toggleClass('modal-md', options.size === 'md')
+            .toggleClass('modal-loading', !this.isShown);
+
+        $dialog.toggleClass('modal-md', options.size === 'md')
             .toggleClass('modal-sm', options.size === 'sm')
             .toggleClass('modal-lg', options.size === 'lg')
-            .toggleClass('modal-fullscreen', options.size === 'fullscreen')
-            .toggleClass('modal-loading', !this.isShown);
+            .toggleClass('modal-fullscreen', options.size === 'fullscreen');
+
         $header.toggle(options.showHeader);
         $header.find('.modal-icon').attr('class', 'modal-icon icon-' + options.icon);
         $header.find('.modal-title-name').html(options.title || '');
@@ -2022,11 +2102,13 @@
                             $modal.callEvent('loaded' + ZUI_MODAL, {
                                 modalType: 'iframe',
                                 jQuery: frame$
-                            }, that);
+                            }, null);
 
                             setTimeout(ajustFrameSize, 100);
 
                             $framebody.off('resize.' + NAME).on('resize.' + NAME, resizeDialog);
+                        } else {
+                            readyToShow();
                         }
 
                         frame$.extend({
@@ -2103,7 +2185,7 @@
                     url: $this.attr('href'),
                     type: $this.hasClass('iframe') ? 'iframe' : ''
                 }, $this.data(), $.isPlainObject(option) && option);
-            if(!data) $this.data(NAME, (data = new ModalTrigger(options)));
+            if(!data) $this.data(NAME, (data = new ModalTrigger(options, $this)));
             if(typeof option == STR_STRING) data[option](settings);
             else if(options.show) data.show(settings);
 
@@ -2172,7 +2254,7 @@
         if(!$target || !$target.length) {
             if(!$this.data(NAME)) {
                 $this.modalTrigger({
-                    show: true
+                    show: true,
                 });
             } else {
                 $this.trigger('.toggle.' + NAME);
@@ -2189,6 +2271,10 @@
  * Bootstrap: tooltip.js v3.0.0
  * http://twzui.github.com/bootstrap/javascript.html#tooltip
  * Inspired by the original jQuery.tipsy by Jason Frame
+ *  
+ * ZUI: The file has been changed in ZUI. It will not keep update with the
+ * Bootsrap version in the future.
+ * http://zui.sexy
  * ========================================================================
  * Copyright 2012 Twitter, Inc.
  *
@@ -2326,7 +2412,7 @@
     Tooltip.prototype.show = function(content) {
         var e = $.Event('show.zui.' + this.type)
 
-        if(this.hasContent() && this.enabled) {
+        if((content || this.hasContent()) && this.enabled) {
             this.$element.trigger(e)
 
             if(e.isDefaultPrevented()) return
@@ -2599,6 +2685,10 @@
 /* ========================================================================
  * Bootstrap: popover.js v3.0.0
  * http://twbs.github.com/bootstrap/javascript.html#popovers
+ *
+ * ZUI: The file has been changed in ZUI. It will not keep update with the
+ * Bootsrap version in the future.
+ * http://zui.sexy
  * ========================================================================
  * Copyright 2012 Twitter, Inc.
  *
@@ -2740,6 +2830,10 @@
 /* ========================================================================
  * Bootstrap: dropdown.js v3.0.0
  * http://twbs.github.com/bootstrap/javascript.html#dropdowns
+ *
+ * ZUI: The file has been changed in ZUI. It will not keep update with the
+ * Bootsrap version in the future.
+ * http://zui.sexy
  * ========================================================================
  * Copyright 2012 Twitter, Inc.
  *
@@ -2849,9 +2943,10 @@
             selector = $this.attr('href')
             selector = selector && /#/.test(selector) && selector.replace(/.*(?=#[^\s]*$)/, '') //strip for ie7
         }
-
-        var $parent = selector && $(selector)
-
+        var $parent;
+        try {
+            $parent = selector && $(selector);
+        } catch(e) {}
         return $parent && $parent.length ? $parent : $this.parent()
     }
 
@@ -2901,6 +2996,10 @@
 /* ========================================================================
  * Bootstrap: carousel.js v3.0.0
  * http://twzui.github.com/bootstrap/javascript.html#carousel
+ * 
+ * ZUI: The file has been changed in ZUI. It will not keep update with the
+ * Bootsrap version in the future.
+ * http://zui.sexy
  * ========================================================================
  * Copyright 2012 Twitter, Inc.
  *
@@ -2954,6 +3053,7 @@
 
         this.$element.on('touchstart touchmove touchend', touch);
         var touchStartX, touchStartY;
+        var that = this;
 
         /* listen the touch event */
         function touch(event) {
@@ -2985,8 +3085,8 @@
         }
 
         function handleCarousel(carousel, distance) {
-            if(distance > 10) carousel.find('.left.carousel-control').click();
-            if(distance < -10) carousel.find('.right.carousel-control').click();
+            if(distance > 10) that.prev();
+            else if(distance < -10) that.next();
         }
     }
 

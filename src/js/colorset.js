@@ -1,5 +1,5 @@
 /*!
- * ZUI - v1.3.2 - 2016-01-12
+ * ZUI: Generated from less code - v1.5.0 - 2016-09-06
  * http://zui.sexy
  * GitHub: https://github.com/easysoft/zui.git 
  * Copyright (c) 2016 cnezsoft.com; Licensed MIT
@@ -56,8 +56,8 @@
         if(typeof colorName === 'undefined' || colorName === 'random') {
             colorName = presetColors[(nextColorIndex++) % presetColors.length];
         }
-
-        return new $.zui.Color(colorset[colorName] ? colorset[colorName] : colorName);
+        var color = colorset[colorName] ? colorset[colorName] : colorName;
+        return $.zui.Color ? new $.zui.Color(color) : color;
     }
 
     $.zui({colorset: colorset});

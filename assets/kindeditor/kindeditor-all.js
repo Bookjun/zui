@@ -5032,10 +5032,12 @@
             if(self.afterFocus) {
                 self.afterFocus.call(self, e);
             }
+            self.container.addClass('focus');
         }).blur(function(e) {
             if(self.afterBlur) {
                 self.afterBlur.call(self, e);
             }
+            self.container.removeClass('focus');
         });
     }
 
@@ -5752,8 +5754,8 @@
         options.pluginsPath = _undef(options.pluginsPath, options.basePath + 'plugins/');
         if(_undef(options.loadStyleMode, K.options.loadStyleMode)) {
             var themeType = _undef(options.themeType, K.options.themeType);
-            _loadStyle('kindeditor.min.css');
-            _loadStyle(options.themesPath + themeType + '/' + themeType + '.css');
+            _loadStyle(options.basePath + '/kindeditor.min.css');
+            // _loadStyle(options.themesPath + themeType + '/' + themeType + '.css');
         }
 
         function create(editor) {
@@ -7531,7 +7533,7 @@ KindEditor.plugin('image', function(K) {
             fieldName: filePostName,
             form: K('.ke-form', div),
             target: target,
-            width: 60,
+            width: 70,
             afterUpload: function(data) {
                 dialog.hideLoading();
                 if(data.error === 0) {

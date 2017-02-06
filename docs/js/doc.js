@@ -1,12 +1,31 @@
 /*!
- * ZUI - v1.3.2 - 2016-01-14
+ * ZUI: Document - v1.5.0 - 2016-12-11
  * http://zui.sexy
  * GitHub: https://github.com/easysoft/zui.git 
  * Copyright (c) 2016 cnezsoft.com; Licensed MIT
  */
 
+/* ========================================================================
+ * ZUI: doc.js
+ * For document UI
+ * http://zui.sexy
+ * ========================================================================
+ * Copyright (c) 2014-2016 cnezsoft.com; Licensed MIT
+ * ======================================================================== */
+
+
 +(function(window, $) {
     'use strict';
+
+    if(window.location.protocol === 'file:') {
+        $('#fileProtocolTip').removeClass('hidden');
+        $('.loading.loader').removeClass('loading');
+        return;
+    }
+
+    if($.zui.browser.ie && $.zui.browser.ie < 11) {
+        $.zui.messager.danger('你正在使用 IE 较低版本访问，无法获得 ZUI 文档网站的完整体验，建议你更换浏览器再访问。', {time: 20000});
+    }
 
     // Polyfill
     if(!String.prototype.endsWith) {
@@ -34,6 +53,14 @@
         };
     }
 
+    $.fn.allAttrs = function() {
+        var attrs = {};
+        $.each($(this)[0].attributes, function(index, attribute) {
+            attrs[attribute.name] = attribute.value;
+        });
+        return attrs;
+    }
+
     var getQueryString = function(name, defaultValue) {
         var reg = new RegExp("(^|&)" + name + "=([^&]*)(&|$)", "i");
         var r = window.location.search.substr(1).match(reg);
@@ -42,56 +69,40 @@
     };
 
     var debug = getQueryString('debug', 0);
-    if(debug) console.warn("DEBUG ENABLED.");
+    if(debug) {
+        console.warn("DEBUG ENABLED.");
+        $('#pageReloadBtn').show();
+    }
 
     var chapters = {
-        basic: {
-            col: 1
-        },
-        control: {
-            col: 2
-        },
-        component: {
-            col: 2
-        },
-        javascript: {
-            col: 3
-        },
-        view: {
-            col: 3
-        },
-        learn: {
-            col: 1
-        },
-        promotion: {
-            col: 1,
-            row: 2
-        },
-        resource: {
-            col: 1,
-            row: 2
-        },
-        contribution: {
-            col: 1,
-            row: 2
-        }
+        basic       : {col: 1},
+        control     : {col: 2},
+        component   : {col: 2},
+        javascript  : {col: 3},
+        view        : {col: 3},
+        learn       : {col: 1},
+        promotion   : {col: 1, row: 2},
+        resource    : {col: 1, row: 2},
+        contribution: {col: 1, row: 2}
     };
+    var isTouchScreen = 'ontouchstart' in document.documentElement;
     var LAST_RELOAD_ANIMATE_ID = 'lastReloadAnimate',
         LAST_QUERY_ID = 'LAST_QUERY_ID',
-        INDEX_JSON = 'docs/index.json',
-        ICONS_JSON = 'docs/icons.json',
+        INDEX_JSON = debug ? 'docs/index.json' : 'docs/index.min.json',
+        ICONS_JSON = debug ? 'docs/icons.json' : 'docs/icons.min.json',
         PKG_JSON = 'package.json',
-        ZUI_JSON = 'zui.json',
+        ZUI_JSON = debug ? 'zui.json' : 'docs/zui.min.json',
         ZUI_CUSTOM_JSON = 'zui.custom.json',
         UNDEFINED = undefined,
+        isNewRelease = (new Date().getTime()) < 1483027200000, // 2016/12/30
         dataVersion,
         storageEnable,
-        docIndex, iconsIndex,
+        docIndex, iconsIndex, currentSection,
         zuiPkg,
         pkgLibs = {
             standard: null,
             lite: null,
-            separate: null
+            seperate: null
         };
     var docThemes = {
         "default": {
@@ -149,9 +160,9 @@
                 'color-primary': '#8D6E63',
                 'color-secondary': '#795548',
                 'color-pale': '#f7ebe1',
-                'border-radius-base': '4px',
-                'border-radius-large': '6px',
-                'border-radius-small': '2px'
+                'border-radius-base': '15px',
+                'border-radius-large': '15px',
+                'border-radius-small': '15px'
             }
         },
         "yellow": {
@@ -289,41 +300,47 @@
 
         var dataType = url.endsWith('.json') ? 'json' : 'html';
         var loadFromRemote = function() {
-            $.get(url, function(data) {
-                if(data !== null) {
-                    if(isIndexJson) {
-                        dataVersion = data.version;
-                        docIndex = data;
-                    } else if(isIconsJson) {
-                        iconsIndex = {
+            $.ajax({
+                url: url,
+                type: 'GET',
+                dataType: dataType,
+                success: function(data) {
+                    if(data !== null) {
+                        if(isIndexJson) {
+                            dataVersion = data.version;
+                            docIndex = data;
+                        } else if(isIconsJson) {
+                            iconsIndex = {
+                                data: data,
+                                version: dataVersion
+                            };
+                        }
+                        cacheData = {
                             data: data,
                             version: dataVersion
                         };
+                        $.zui.store.set('//' + url, data);
+                        $.zui.store.set('//' + url + '::V', dataVersion);
+
+                        if(debug) console.log('Load', url, 'from remote:', cacheData);
+                        callback(data, 'remote');
+                    } else if(isHasCache && !isIndexJson) {
+                        if(debug) console.log('Failed load', url, 'from remote, instead load cache:', cacheData);
+                        callback(cacheData.data, 'cache');
                     }
-                    cacheData = {
-                        data: data,
-                        version: dataVersion
-                    };
-                    $.zui.store.set('//' + url, data);
-                    $.zui.store.set('//' + url + '::V', dataVersion);
+                },
+                error: function() {
+                    if(debug) console.warn("Ajax error:", url);
+                    if(isHasCache && !isIndexJson) {
+                        if(debug) console.log('Failed load', url, 'from remote with error, instead load cache:', cacheData);
+                        callback(cacheData.data, 'cache');
+                    } else {
+                        callback(null, 'error');
+                    }
 
-                    if(debug) console.log('Load', url, 'from remote:', cacheData);
-                    callback(data, 'remote');
-                } else if(isHasCache && !isIndexJson) {
-                    if(debug) console.log('Failed load', url, 'from remote, instead load cache:', cacheData);
-                    callback(cacheData.data, 'cache');
-                }
-            }, dataType).error(function() {
-                if(debug) console.warn("Ajax error:", url);
-                if(isHasCache && !isIndexJson) {
-                    if(debug) console.log('Failed load', url, 'from remote with error, instead load cache:', cacheData);
-                    callback(cacheData.data, 'cache');
-                } else {
-                    callback(null, 'error');
-                }
-
-                if($body.hasClass('page-open')) {
-                    $pageBody.children('.loader').addClass('with-error');
+                    if($body.hasClass('page-open')) {
+                        $pageBody.children('.loader').addClass('with-error');
+                    }
                 }
             });
         }
@@ -380,22 +397,32 @@
                 var chapterName = chapter.id;
                 section.chapter = chapterName;
                 section.chapterName = chapter.name;
-
                 var url = section.url;
                 if(typeof url === 'undefined') {
-                    section.url = 'docs/part/' + section.chapter + '-' + section.id + '.html';
+                    section.url = 'docs/part/' + section.chapter + '-' + section.id + '.md';
                     section.target = 'page';
+                    section.targetType = 'markdown';
+                    section.oldUrl = 'docs/part/' + section.chapter + '-' + section.id + '.html';
                 } else if(isExternalUrl(url)) {
                     section.target = 'external';
+                    section.targetType = null;
                 } else if(url && url.endsWith('.md')) {
                     section.target = 'page';
                     section.targetType = 'markdown';
                     if(url === '.md') {
                         section.url = 'docs/part/' + section.chapter + '-' + section.id + '.md';
                     }
+                } else if(url && url.endsWith('.html')) {
+                    section.target = 'page';
+                    section.targetType = 'html';
+                    if(url === '.html') {
+                        section.url = 'docs/part/' + section.chapter + '-' + section.id + '.html';
+                    }
                 } else {
                     section.target = '';
                 }
+
+                if(section.hidden) return;
 
                 var id = chapterName + '-' + section.id;
                 var $tpl = $sectionTemplate.clone().data('section', section);
@@ -410,7 +437,7 @@
                 var $head = $tpl.children('.card-heading');
                 var sectionUrl = '#' + chapterName + '/' + section.id;
                 $head.find('.name').text(section.name).attr('href', sectionUrl);
-                // $head.children('.desc').text(section.desc);
+                $head.attr('title', section.desc);
                 displaySectionIcon($head.children('.icon'), section);
                 var $topics = $tpl.find('.topics');
                 if(section.topics && section.topics.length) {
@@ -442,6 +469,8 @@
                 }, 100));
                 sectionsShowed = true;
             }
+            $('.text-page-count').text($sections.filter('[data-target="page"]').length);
+            $('.text-external-count').text($sections.filter('[data-target="external"]').length);
         } else if(debug) {
             console.error("Display sections failed.");
         }
@@ -485,6 +514,7 @@
                 scrollToSection($section);
                 return;
             }
+            $sections.find(':focus').blur();
             var isOpened = $section && $section.hasClass('open');
             $sections.removeClass(keepOtherOpen ? 'choosed' : 'choosed open');
             if($section && $section.hasClass('section')) {
@@ -627,8 +657,9 @@
         var icon = $icon.data('icon');
         $search.data('preview', icon.id);
         var id = 'icon-' + icon.id;
-        $preview.find('.icon').addClass(id);
-        $preview.find('.name').text(id);
+        var isSpinner = (icon.id.startsWith('spin') || (icon.categories && icon.categories.indexOf('Spinner Icons') > -1)) === true;
+        $preview.find('.icon').addClass(id).toggleClass('icon-spin', isSpinner);
+        $preview.find('.name').text(isSpinner ? ('icon-spin ' + id) : id);
         $preview.find('.unicode').text(icon.code);
         if(icon.alias && icon.alias.length) {
             $preview.find('.alias').removeClass('hide').find('.alias-values').text(icon.alias.join(','));
@@ -765,8 +796,8 @@
                 keyOption.chapter = key.substr(1);
                 keyOption.val = keyOption.chapter;
             } else if(key.startsWith('#')) {
-                keyOption.type = 'id';
-                keyOption.val = key.substr(2);
+                keyOption.type = 'tag';
+                keyOption.val = key.substr(1);
             } else if(key.startsWith('icon-') || key.startsWith('icon:')) {
                 keyOption.type = 'icon';
                 keyOption.val = key.substr(5);
@@ -850,6 +881,18 @@
                                 return false;
                             }
                             break;
+                        case 'version':
+                            if(key.val == 'new') {
+                                chooseThisKey = section.isNew;
+                            } else if(key.val == 'update') {
+                                chooseThisKey = section.isUpdate;
+                            }  else if(!key.val) {
+                                chooseThisKey = section.isUpdate || section.isNew;
+                            } else {
+                                chooseThisKey = section.version === key.val;
+                            }
+                            weight = 100;
+                            break;
                         default:
                             var sectionName = section.name.toLowerCase();
                             if(sectionName.includes(keyVal)) {
@@ -903,7 +946,7 @@
                                     });
                                     if(isBreak) break;
                                 }
-                                if(section.desc.toLowerCase().includes(keyVal)) {
+                                if(section.desc && section.desc.toLowerCase().includes(keyVal)) {
                                     chooseThisKey = true;
                                     matchType = 'section.desc';
                                     weight = 30;
@@ -1011,7 +1054,7 @@
             }
 
             $window.scrollTop(1);
-            closePage();
+            if(!$('body').hasClass('view-double')) closePage();
         } else if(debug) {
             console.error("Query failed with key: ", keys);
         }
@@ -1051,14 +1094,14 @@
         }
     };
 
-    var closePage = function() {
+    var closePage = function(onlyEvent) {
         window['afterPageLoad'] = null;
         window['onPageLoad'] = null;
         if($.isFunction(window['onPageClose'])) {
             window['onPageClose']();
             window['onPageClose'] = null;
         }
-        if($body.hasClass('page-open')) {
+        if(!onlyEvent && $body.hasClass('page-open')) {
             var style = $page.data('trans-style');
             if(style) {
                 style['max-height'] = '';
@@ -1101,7 +1144,7 @@
         };
 
         if(valType === 'number') {
-            expandTopic($pageContent.children('section').eq(topic));
+            expandTopic($pageContent.children('section').removeClass('hover').eq(topic));
         } else if(valType === 'string' && valType.length) {
             // highlight element with the id string.
         }
@@ -1135,147 +1178,49 @@
             }
         }, 200);
 
+        if(zuiPkg) {
+            $pageBody.find('.zui-version').text(zuiPkg.version);
+        }
+
         if(!delayMutedPageLoading) stopPageLoading();
     };
 
-    var openPage = function($section, section, topic) {
-        var pageId = section.chapter + '-' + section.id;
-        if($body.hasClass('page-open') && pageId === $body.attr('data-page')) {
-            if(debug) console.warn('The page already showed.');
-            return;
-        }
-        chooseSection($section, false, true);
+    var loadPage = function(section, topic, waitRemote) {
+        section = section || currentSection;
 
-        // Send ga data
-        var pageUrl = '#' + section.chapter + '/' + section.id;
-        if(topic) pageUrl += '/' + topic;
-        window.document.title = section.chapterName + ' > ' + section.name + ' - ' + documentTitle;
-        window.location.hash = pageUrl;
-        if(window['ga'] && $.isFunction(ga)) ga('send', 'pageview', window.location.pathname + pageUrl);
-
-        $body.attr('data-page-accent', $section.data('accent')).attr('data-page', pageId);
-        displaySectionIcon($pageHeader.find('.icon'), section);
-        $pageHeader.find('.name').text(section.name).attr('href', pageUrl);
-        // $pageHeader.find('.desc').text(section.desc);
-
-        // page attributes
-        $pageAttrs.hide();
-        $pageAttrs.children('.badge-author').toggle(!!section.author).find('.author-name').text(section.author);
-        $pageAttrs.children('.badge-source').toggle(!!section.url).attr('href', 'https://github.com/easysoft/zui/tree/master/' + section.url);
-        var lib = section.lib;
-        if(lib) {
-            $pageAttrs.children('.badge-zui').toggle(!!lib.bundles.standard);
-            $pageAttrs.children('.badge-lite').toggle(!!lib.bundles.lite);
-            $pageAttrs.children('.badge-lib').toggle(!!lib.bundles.separate);
-            $pageAttrs.children('.badge-custom').toggle(!!lib.custom);
-
-            $pageAttrs.children('.badge-version').toggle(!!lib.ver).text(lib.ver + '+');
-            $pageAttrs.children('.badge-party').toggle(!!lib.thirdpart).attr('href', lib.partUrl || 'javascript:;').find('.product-ver').text(lib.pver);
-
-            var isShowCodeBadage = lib.srcCount > 0 || lib.bundlesCount > 0;
-            var $codeDropMenu = $pageAttrs.children('.badge-code-dropdown').toggle(isShowCodeBadage);
-            if(isShowCodeBadage) {
-                var $badge = $codeDropMenu.find('.badge-code').attr('data-type', 'has' + (!!lib.srcCount ? '-source' : '') + (!!lib.bundlesCount ? '-bundles' : ''));
-                $badge.children('.badge-code-source').toggle(!!lib.srcCount).find('.count').text(lib.srcCount);
-                $badge.children('.badge-code-pkgs').toggle(!!lib.bundlesCount).find('.count').text(lib.bundlesCount);
-
-                var $dropdown = $codeDropMenu.find('.dropdown-menu').empty();
-                var srcTypes = {
-                    js: "Javascript",
-                    css: "CSS",
-                    less: "LESS",
-                    resource: "资源",
-                };
-                if(lib.srcCount) {
-                    $dropdown.append('<li class="dropdown-header primary-header" data-type="source"><i class="icon icon-file-code"></i>  源码 ' + lib.srcCount + '</li>');
-                    $.each(lib.src, function(srcName, files) {
-                        $dropdown.append('<li class="dropdown-header">' + (srcTypes[srcName] || srcName) + '</li>');
-                        files.forEach(function(f) {
-                            f = f.replace(/\/\//g, '/');
-                            $dropdown.append('<li><a target="_blank" href="https://github.com/easysoft/zui/blob/master/' + f + '">' + f + '</a></li>');
-                        });
-                    });
-                }
-                if(lib.bundlesCount) {
-                    $dropdown.append('<li class="dropdown-header primary-header" data-type="bundles"><i class="icon icon-cube"></i> 打包</li>');
-                    if(lib.bundles.standard) {
-                        $dropdown.append('<li class="dropdown-header">标准版</li>');
-                        var files = [];
-                        if(lib.src.js && lib.src.js.length) {
-                            files.push('dist/js/zui.js', 'dist/js/zui.min.js');
-                        }
-                        if(lib.src.less && lib.src.less.length) {
-                            files.push('dist/css/zui.css', 'dist/css/zui.min.css');
-                        }
-                        if(lib.src.resource && lib.src.resource.length) {
-                            lib.src.resource.forEach(function(rf) {
-                                if(rf.indexOf('//') > -1) {
-                                    rf = 'dist/' + rf.substr(rf.indexOf('//') + 1);
-                                } else {
-                                    rf = rf.replace('src/', 'dist/').replace('assets/', 'dist/');
-                                }
-                                files.push(rf);
-                            });
-                        }
-                        files.forEach(function(f) {
-                            f = f.replace(/\/\//g, '/');
-                            $dropdown.append('<li><a target="_blank" href="https://github.com/easysoft/zui/blob/master/' + f.replace('/**/*', '') + '">' + f + '</a></li>');
-                        });
-                    }
-                    if(lib.bundles.lite) {
-                        $dropdown.append('<li class="dropdown-header">简洁版</li>');
-                        var files = [];
-                        if(lib.src.js && lib.src.js.length) {
-                            files.push('dist/js/zui.lite.js', 'dist/js/zui.lite.min.js');
-                        }
-                        if(lib.src.less && lib.src.less.length) {
-                            files.push('dist/css/zui.lite.css', 'dist/css/zui.lite.min.css');
-                        }
-                        if(lib.src.resource && lib.src.resource.length) {
-                            lib.src.resource.forEach(function(rf) {
-                                if(rf.indexOf('//') > -1) {
-                                    rf = 'dist/' + rf.substr(rf.indexOf('//') + 1);
-                                } else {
-                                    rf = rf.replace('src/', 'dist/').replace('assets/', 'dist/');
-                                }
-                                files.push(rf);
-                            });
-                        }
-                        files.forEach(function(f) {
-                            f = f.replace(/\/\//g, '/');
-                            $dropdown.append('<li><a target="_blank" href="https://github.com/easysoft/zui/blob/master/' + f.replace('/**/*', '') + '">' + f + '</a></li>');
-                        });
-                    }
-                    if(lib.bundles.separate) {
-                        $dropdown.append('<li class="dropdown-header">独立组件</li>');
-                        $dropdown.append('<li><a target="_blank" href="https://github.com/easysoft/zui/blob/master/dist/lib/' + section.id + '">dist/lib/' + section.id + '/**/*</a></li>');
-                    }
-                    if(lib.code === 'theme') {
-                        $dropdown.append('<li><a target="_blank" href="https://github.com/easysoft/zui/blob/master/dist/zui-theme.css">dist/css/zui-theme.css</a></li>');
-                        $dropdown.append('<li><a target="_blank" href="https://github.com/easysoft/zui/blob/master/dist/zui-theme.min.css">dist/css/zui-theme.min.css</a></li>');
-                    }
-                }
-            }
-        }
-
-        $pageContent.empty();
+        if(topic !== '!refresh') $pageContent.empty();
         $page.addClass('loading');
         $pageLoader.removeClass('with-error').addClass('loading');
         var lastShowDataCall;
 
-        loadData(section.url, function(data) {
+        loadData(section.url, function(data, dataType) {
+            if(zuiPkg) data = data.format(zuiPkg, '{\\$0}');
             var showData = function() {
-                if(marked && section.targetType === 'markdown') {
+                if(data && window.marked && section.targetType === 'markdown') {
                     var $article = $();
-                    var $markdown = $(marked(data));
+                    var frontMatterIndex = data.indexOf('\n---\n');
+                    if(frontMatterIndex > -1) data = data.substr(frontMatterIndex + 5);
+                    var $markdown = $(window.marked(data));
                     var $lastSection, checkFirstH1 = true;
                     var hasH2 = $markdown.filter('h2').length > 0;
+                    var $lastTemplate = null;
                     $markdown.each(function() {
                         var $tag = $(this);
                         var tagName = $tag.prop('tagName');
-                        if(tagName === 'STYLE' || tagName === 'SCRIPT') {
+                        if(!tagName || tagName === 'STYLE' || tagName === 'SCRIPT') {
                             $article = $article.add($tag);
                             return;
+                        }
+                        if(tagName === 'TEMPLATE' || tagName === 'HOLDER') {
+                            $lastTemplate = $tag;
+                            return;
+                        } else if($lastTemplate) {
+                            $tag.attr($lastTemplate.allAttrs());
+                            $lastTemplate = null;
+                        }
+                        if(tagName === 'TABLE') {
+                            $tag.addClass('table');
+                            $tag = $('<div class="table-responsive"/>').append($tag);
                         }
                         if(checkFirstH1) {
                             if(tagName === 'H1') {
@@ -1283,6 +1228,9 @@
                             }
                             checkFirstH1 = false;
                             return;
+                        }
+                        if(tagName === 'EXAMPLE') {
+                            $tag = $('<div/>').attr($tag.allAttrs()).html($tag.html()).addClass('example');
                         }
                         if((hasH2 && (tagName === 'H1' || tagName === 'H2')) || (!hasH2 && tagName === 'H3')) {
                             if($lastSection) {
@@ -1314,9 +1262,14 @@
                     }
                     $pageContent.empty().append($article);
                 } else {
-                    $pageContent.html(data);
+                    try {
+                        $pageContent.html(data);
+                    } catch (e) {
+                        console.error('Page data has error: ', {content: data, error: e});
+                    }
                 }
-                $pageBody.scrollTop(0);
+
+                if(topic !== '!refresh') $pageBody.scrollTop(0);
                 showPageTopic(topic);
                 handlePageLoad();
                 $pageAttrs.show();
@@ -1327,7 +1280,7 @@
             } else {
                 showData();
             }
-        }, 400);
+        }, 400, waitRemote);
 
         if($body.hasClass('page-open')) {
             if(debug) console.log('open section in open page', section);
@@ -1335,6 +1288,139 @@
         }
 
         $body.addClass('page-open');
+    };
+
+    var openPage = function($section, section, topic) {
+        var pageId = section.chapter + '-' + section.id;
+        var isPageOpen = $body.hasClass('page-open');
+        if(isPageOpen && pageId === $body.attr('data-page')) {
+            if(debug) console.warn('The page already showed, page will be reload.');
+            if(topic !== undefined) {
+                showPageTopic(topic);
+            } else {
+                closePage(true);
+                loadPage(null, '!refresh', true);
+            }
+            return;
+        }
+        if(isPageOpen) closePage(true);
+
+        currentSection = section;
+        chooseSection($section, false, true);
+
+        // Send ga data
+        var pageUrl = '#' + section.chapter + '/' + section.id;
+        if(topic) pageUrl += '/' + topic;
+        window.document.title = section.chapterName + ' > ' + section.name + ' - ' + documentTitle;
+        window.location.hash = pageUrl;
+        if(window['ga'] && $.isFunction(ga)) ga('send', 'pageview', window.location.pathname + pageUrl);
+
+        $body.attr('data-page-accent', $section.data('accent')).attr('data-page', pageId);
+        displaySectionIcon($pageHeader.find('.icon'), section);
+        $pageHeader.find('.name').text(section.name).attr('href', pageUrl);
+        // $pageHeader.find('.desc').text(section.desc);
+
+        // page attributes
+        $pageAttrs.hide();
+        $pageAttrs.children('.badge-author').toggle(!!section.author).find('.author-name').text(section.author);
+        $pageAttrs.children('.badge-source').toggle(!!section.url).attr('href', 'https://github.com/easysoft/zui/tree/master/' + section.url);
+        var lib = section.lib;
+        if(lib) {
+            $pageAttrs.children('.badge-zui').toggle(!!lib.bundles.standard);
+            $pageAttrs.children('.badge-lite').toggle(!!lib.bundles.lite);
+            $pageAttrs.children('.badge-lib').toggle(!!lib.bundles.seperate);
+            $pageAttrs.children('.badge-custom').toggle(!!lib.custom);
+            $pageAttrs.children('.badge-bootstrap').toggle(lib.source === 'Bootstrap');
+            $pageAttrs.children('.badge-version').toggle(!!lib.ver).text(lib.ver + '+');
+            $pageAttrs.children('.badge-party').toggle(!!(lib.source && lib.source !== 'Bootstrap')).attr('href', lib.website || lib.project || 'javascript:;').find('.product-ver').text(lib.pver || '');
+
+            var isShowCodeBadage = lib.srcCount > 0 || lib.bundlesCount > 0;
+            var $codeDropMenu = $pageAttrs.children('.badge-code-dropdown').toggle(isShowCodeBadage);
+            if(isShowCodeBadage) {
+                var $badge = $codeDropMenu.find('.badge-code').attr('data-type', 'has' + (!!lib.srcCount ? '-source' : '') + (!!lib.bundlesCount ? '-bundles' : ''));
+                $badge.children('.badge-code-source').toggle(!!lib.srcCount).find('.count').text(lib.srcCount);
+                $badge.children('.badge-code-pkgs').toggle(!!lib.bundlesCount).find('.count').text(lib.bundlesCount);
+
+                var $dropdown = $codeDropMenu.find('.dropdown-menu').empty();
+                var srcTypes = {
+                    js: "Javascript",
+                    css: "CSS",
+                    less: "LESS",
+                    resource: "资源",
+                };
+                var srcPrefix = 'https://github.com/easysoft/zui/blob/' + (zuiPkg.version ? ('v' + zuiPkg.version) : 'master') + '/';
+                if(lib.srcCount) {
+                    $dropdown.append('<li class="dropdown-header primary-header" data-type="source"><i class="icon icon-file-code"></i>  源码 ' + lib.srcCount + '</li>');
+                    $.each(lib.src, function(srcName, files) {
+                        $dropdown.append('<li class="dropdown-header">' + (srcTypes[srcName] || srcName) + '</li>');
+                        files.forEach(function(f) {
+                            f = f.replace(/\/\//g, '/');
+                            $dropdown.append('<li><a target="_blank" href="' + srcPrefix + f + '">' + f + '</a></li>');
+                        });
+                    });
+                }
+                if(lib.bundlesCount) {
+                    $dropdown.append('<li class="dropdown-header primary-header" data-type="bundles"><i class="icon icon-cube"></i> 打包</li>');
+                    if(lib.bundles.standard) {
+                        $dropdown.append('<li class="dropdown-header">标准版</li>');
+                        var files = [];
+                        if(lib.src.js && lib.src.js.length) {
+                            files.push('dist/js/zui.js');
+                        }
+                        if(lib.src.less && lib.src.less.length) {
+                            files.push('dist/css/zui.css');
+                        }
+                        if(lib.src.resource && lib.src.resource.length) {
+                            lib.src.resource.forEach(function(rf) {
+                                if(rf.indexOf('//') > -1) {
+                                    rf = 'dist/' + rf.substr(rf.indexOf('//') + 1);
+                                } else {
+                                    rf = rf.replace('src/', 'dist/').replace('assets/', 'dist/');
+                                }
+                                files.push(rf);
+                            });
+                        }
+                        files.forEach(function(f) {
+                            f = f.replace(/\/\//g, '/');
+                            $dropdown.append('<li><a target="_blank" href="' + srcPrefix + f.replace('/**/*', '') + '">' + f + '</a></li>');
+                        });
+                    }
+                    if(lib.bundles.lite) {
+                        $dropdown.append('<li class="dropdown-header">简洁版</li>');
+                        var files = [];
+                        if(lib.src.js && lib.src.js.length) {
+                            files.push('dist/js/zui.lite.js');
+                        }
+                        if(lib.src.less && lib.src.less.length) {
+                            files.push('dist/css/zui.lite.css');
+                        }
+                        if(lib.src.resource && lib.src.resource.length) {
+                            lib.src.resource.forEach(function(rf) {
+                                if(rf.indexOf('//') > -1) {
+                                    rf = 'dist/' + rf.substr(rf.indexOf('//') + 1);
+                                } else {
+                                    rf = rf.replace('src/', 'dist/').replace('assets/', 'dist/');
+                                }
+                                files.push(rf);
+                            });
+                        }
+                        files.forEach(function(f) {
+                            f = f.replace(/\/\//g, '/');
+                            $dropdown.append('<li><a target="_blank" href="' + srcPrefix + f.replace('/**/*', '') + '">' + f + '</a></li>');
+                        });
+                    }
+                    if(lib.bundles.seperate) {
+                        $dropdown.append('<li class="dropdown-header">独立组件</li>');
+                        $dropdown.append('<li><a target="_blank" href="' + srcPrefix + 'dist/lib/' + section.id + '">dist/lib/' + section.id + '/**/*</a></li>');
+                    }
+                    if(lib.code === 'theme') {
+                        $dropdown.append('<li><a target="_blank" href="' + srcPrefix + 'dist/zui-theme.css">dist/css/zui-theme.css</a></li>');
+                    }
+                }
+            }
+        }
+
+        loadPage(section, topic);
 
         toggleCompactMode(true, function() {
             checkScrollbar();
@@ -1351,12 +1437,14 @@
                         if(firstOpenPage) {
                             firstOpenPage = false;
                             $.zui.store.set('first_open_page', false);
-                            setTimeout(function() {
-                                $('#pageCloseBtn').tooltip('show').addClass('active');
+                            if(!isTouchScreen) {
                                 setTimeout(function() {
-                                    $('#pageCloseBtn').tooltip('hide').removeClass('active');
-                                }, 6000);
-                            }, 500);
+                                    $('#pageCloseBtn').tooltip('show').addClass('active');
+                                    setTimeout(function() {
+                                        $('#pageCloseBtn').tooltip('hide').removeClass('active');
+                                    }, 6000);
+                                }, 500);
+                            }
                         }
                     }
                 }, 300);
@@ -1420,7 +1508,16 @@
                 window.open(section.url, '_blank');
                 break;
             case 'page':
-                openPage($section, section, topic);
+                var pageViewLayout = $.zui.store.get('pageViewLayout');
+                if(!pageViewLayout && $(window).width() >= 1600) {
+                    $('#changeViewModal').on('hide.zui.modal', function() {
+                        pageViewLayout = $.zui.store.get('pageViewLayout');
+                        if(!pageViewLayout) $.zui.store.set('pageViewLayout', 'single');
+                        openPage($section, section, topic);
+                    }).modal('show');
+                } else {
+                    openPage($section, section, topic);
+                }
                 break;
             default:
                 if(debug) console.error("Open section failed: unknown target.");
@@ -1454,7 +1551,7 @@
     };
 
     var openPageUrl = function(url) {
-        if(url.startsWith('#') && url.length > 1) {
+        if(url.startsWith('#') && url.length > 1 && url.indexOf('##') !== 0) {
             url = url.substr(1);
             setTimeout(function() {
                 var params = url.split('/');
@@ -1481,7 +1578,7 @@
                 namesDot = name + 's.';
             for(var i = 0; i < len; ++i) {
                 var item = libNames[i];
-                if(item === name || item === names || (lib && !lib.src && isInLib(name, lib.dpds))) {
+                if(item === name || item === names || item.startsWith(nameDot) || item.startsWith(namesDot)) {
                     return true;
                 }
             }
@@ -1498,12 +1595,24 @@
         }
 
         if(build.bundles) {
-            $.each(build.bundles, function(idx, val) {
-                if(pkg.builds[val]) {
-                    getBuildList(pkg, pkg.builds[val], lib, list);
-                } else {
-                    list = getItemList(lib, [val], list);
+            $.each(build.bundles, function(idx, name) {
+                var bundleBuild = pkg.builds[name];
+                var buildLib = lib[name];
+                if(!bundleBuild && buildLib) {
+                    bundleBuild = {
+                        title: buildLib.name,
+                        dest: 'dist/lib/' + name + '/',
+                        filename: (buildLib.source && buildLib.source !== 'Bootstrap') ? name : ('zui.' + name),
+                        includes: [name],
+                        source: buildLib.source,
+                        settingDpds: (buildLib.src && buildLib.src.less && buildLib.src.less.length) ? ['setting'] : null,
+                        ignoreBasic: true,
+                        ignoreDpds: buildLib.ignoreDpds === undefined ? true : buildLib.ignoreDpds
+                    };
+                    pkg.builds[name] = bundleBuild;
                 }
+
+                getBuildList(pkg, bundleBuild, lib, list);
             });
         }
 
@@ -1536,27 +1645,27 @@
     var loadPackage = function(callback) {
         loadData(PKG_JSON, function(pkg) {
             loadData(ZUI_JSON, function(zui) {
-                loadData(ZUI_CUSTOM_JSON, function(customZui) {
+                // loadData(ZUI_CUSTOM_JSON, function(customZui) {
                     zuiPkg = $.extend(pkg, {
-                        lib: $.extend({}, zui.lib, customZui.lib),
-                        builds: $.extend({}, zui.builds, customZui.builds)
+                        lib: $.extend({}, zui.lib/*, customZui ? customZui.lib : null*/),
+                        builds: $.extend({}, zui.builds/*, customZui ? customZui.builds : null*/)
                     });
                     if($.doc) $.doc.pkg = zuiPkg;
                     callback(zuiPkg);
-                }, null, true);
+                // }, null, true);
             }, null, true);
         }, null, true);
     };
 
     var initPackage = function() {
         loadPackage(function(pkg) {
-            $('.zui-version').text('v' + pkg.version);
+            $('.zui-version').text(pkg.version);
             pkgLibs.standard = getBuildList(pkg, pkg.builds.standard, pkg.lib);
             pkgLibs.lite = getBuildList(pkg, pkg.builds.lite, pkg.lib);
-            pkgLibs.separate = getBuildList(pkg, pkg.builds.separate, pkg.lib);
+            pkgLibs.seperate = getBuildList(pkg, pkg.builds.seperate, pkg.lib);
 
             function getLibSource(lib, src, libName) {
-                if(lib.src && !lib.thirdpart) {
+                if(lib.src) {
                     ['less', 'js', 'resource'].forEach(function(srcTypeName) {
                         if(lib.src[srcTypeName]) {
                             lib.src[srcTypeName].forEach(function(srcName) {
@@ -1571,9 +1680,9 @@
                         }
                     });
                 }
-                if(lib.dpds && lib.dpds) {
+                if(lib.dpds) {
                     lib.dpds.forEach(function(dpdsName) {
-                        if(dpdsName.startsWith(libName) && pkg.lib[dpdsName]) {
+                        if(dpdsName.startsWith(libName) && pkg.lib[dpdsName] && !pkg.lib[dpdsName].thirdpart) {
                             getLibSource(pkg.lib[dpdsName], src, libName);
                         } 
                     });
@@ -1584,7 +1693,7 @@
                 var libName = section.dpds || section.id;
                 var pkgLib = pkg.lib[libName];
                 if(!pkgLib) {
-                    libName = section.id + 's';
+                    libName = libName + 's';
                     pkgLib = pkg.lib[libName];
                 }
                 var lib = {
@@ -1592,12 +1701,14 @@
                     bundles: {}
                 };
                 $.each(pkgLibs, function(name, libNames) {
-                    if(isInLib(section.id, libNames, pkgLib)) {
+                    if(isInLib(libName, libNames, pkgLib)) {
                         lib.bundles[name] = true;
                     }
                 });
 
                 if(pkgLib) {
+                    $.extend(lib, pkgLib);
+
                     if(pkgLib.thirdpart) {
                         lib.thirdpart = true;
                         lib.partUrl = pkgLib.website;
@@ -1606,6 +1717,12 @@
 
                     if(!pkgLib.src && pkgLib.dpds) {
                         lib.custom = true;
+                        if(!lib.source) {
+                            $.each(pkgLib.dpds, function(_, dpdLibName) {
+                                var dpdLib = pkg.lib[dpdLibName];
+                                if(dpdLib && dpdLib.source) lib.source = dpdLib.source;
+                            });
+                        }
                     }
 
                     if(pkgLib.ver) {
@@ -1622,18 +1739,23 @@
                     }
 
                     lib.src = {};
-
                     getLibSource(pkgLib, lib.src, lib.code);
 
                     lib.srcCount = (lib.src.js ? lib.src.js.length : 0) + (lib.src.less ? lib.src.less.length : 0) + (lib.src.source ? lib.src.source.length : 0);
                     lib.bundlesCount = 0;
                     if(!!lib.bundles.standard) lib.bundlesCount++;
                     if(!!lib.bundles.lite) lib.bundlesCount++;
-                    if(!!lib.bundles.separate) lib.bundlesCount++;
+                    if(!!lib.bundles.seperate) lib.bundlesCount++;
                     if(lib.code === 'theme') lib.bundlesCount++;
                 }
 
                 section.lib = lib;
+                section.isNew = section.version === pkg.version;
+                section.isUpdate = section.update === pkg.version;
+                
+                if(isNewRelease) {
+                    $('#section-' + section.chapter + '-' + section.id).toggleClass('section-update', section.isUpdate).toggleClass('section-new', section.isNew);
+                }
             });
         });
     };
@@ -1646,15 +1768,18 @@
             var getChildCompsList = function(val) {
                 return data.lib[val].name;
             };
-            var $tr, $td;
+            var $tr, $td, totalCount = 0;
             $.each(data.lib, function(itemName, item) {
-                if(item.custom) return;
+                if(item.hidden) return;
 
-                var childComps = '';
+                var childComps = '', isZUI = false;
                 if(!item.src && item.dpds) {
                     var childList = getItemList(data.lib, item.dpds, null, true, true);
-                    childComps = '合并组件包含：';
+                    childComps = '包含：';
                     childComps += $.map(childList, getChildCompsList).join('、');
+                    item.merged = true;
+                } else {
+                    totalCount++;
                 }
 
                 $tr = $('<tr/>');
@@ -1675,6 +1800,23 @@
                 });
 
                 $td = $('<td/>');
+                if(item.source) {
+                    var $a = $('<a data-toggle="tooltip"/>').attr({
+                        target: '_blank',
+                        href: item.website || item.project || (item.source === 'Bootstrap' ? 'http://getbootstrap.com/' : '###')
+                    }).text(item.source);
+                    $td.append($a);
+                } else if(item.merged) {
+                    $td.append('<span class="text-muted">(合并组件)</span>');
+                } else {
+                    isZUI = true;
+                    $td.append('<span data-toggle="tooltip" title="License: MIT">ZUI</span>');
+                }
+                $tr.append($td);
+
+                $tr.append('<td>' + (item.source === 'Bootstrap' ? 'MIT' : (isZUI ? 'MIT' : (item.license || ''))) + '</td>');
+
+                $td = $('<td/>');
                 $td.html(item.ver ? (' v' + item.ver + '+') : childComps);
                 $tr.append($td);
 
@@ -1686,6 +1828,7 @@
                 rowHover: false,
                 fixedHeaderOffset: 200
             });
+            $('.components-count').text(totalCount);
         });
     };
 
@@ -1701,25 +1844,25 @@
 
             clipboard.on('error', function(e) {
                 $('#copyCodeTip').addClass('tooltip-warning');
-                $copyCodeBtn.tooltip('show', '按 <strong>Ctrl+C</strong> 完成复制');
+                $copyCodeBtn.tooltip('show', isTouchScreen ? '你的浏览器不支持直接复制，请自行选择并复制。' : '按 <strong>Ctrl+C</strong> 完成复制');
             });
 
             $copyCodeBtn.on('hide.zui.tooltip', function() {
                 $('#copyCodeTip').removeClass('tooltip-success tooltip-warning');
             });
 
-            $(document).on('mouseenter', 'pre.prettyprint, pre.copyable', function() {
-                var $pre = $(this);
-                var $codes = $pre.children('code, .linenums');
-                if(!$codes.length) return;
+            $(document).on('mouseenter', 'pre.prettyprint, .copyable', function() {
+                var $copyable = $(this);
+                var $copyableTarget = $copyable.children('code, .linenums, .copyable-target');
+                if(!$copyableTarget.length) return;
 
-                if(!$codes.attr('id')) {
-                    $codes.attr('id', 'code-' + $.zui.uuid())
+                if(!$copyableTarget.attr('id')) {
+                    $copyableTarget.attr('id', 'code-' + $.zui.uuid())
                 }
-                $pre.prepend($copyCodeBtn);
-                $copyCodeBtn.attr('data-clipboard-target', '#' + $codes.attr('id'));
-                $pre.one('mouseleave', function() {
-                     $copyCodeBtn.detach();
+                $copyable.prepend($copyCodeBtn);
+                $copyCodeBtn.attr('data-clipboard-target', '#' + $copyableTarget.attr('id'));
+                $copyable.one('mouseleave', function() {
+                    $copyCodeBtn.detach();
                 });
             });
         }
@@ -1800,8 +1943,10 @@
         } else {
             setTimeout(function() {
                 compileTheme(theme, null, function(style) {
-                    theme.css = style.css;
-                    readyChangeTheme(style.css);
+                    if(style) {
+                        theme.css = style.css;
+                    }
+                    readyChangeTheme(style ? style.css : '');
                 });
             }, 500);
         }
@@ -1817,6 +1962,41 @@
         if(savedTheme) {
             changeTheme(savedTheme)
         }
+    };
+
+    var initChangeView = function() {
+        var changePageView = function(pageViewLayout, notSave) {
+            if(pageViewLayout) {
+                if(!notSave) $.zui.store.set('pageViewLayout', pageViewLayout);
+            } else {
+                pageViewLayout = $.zui.store.get('pageViewLayout');
+            }
+            var isDoubleView = pageViewLayout === 'double' && $(window).width() >= 1200;
+            $('body').toggleClass('view-double', isDoubleView);
+        };
+
+        var $modal = $('#changeViewModal');
+        var hoverEnable = false, isDoubleView;
+        $modal.on('show.zui.modal', function() {
+            isDoubleView = $('body').hasClass('view-double');
+            hoverEnable = true;
+            $modal.find('.view-option.active').removeClass('active');
+            $modal.find('.view-option-' + (isDoubleView ? 'double' : 'single')).addClass('active');
+        }).on('click', '.view-option', function() {
+            hoverEnable = false;
+            changePageView($(this).hasClass('view-option-double') ? 'double' : 'single');
+            $modal.modal('hide');
+        }).on('mouseenter', '.view-option', function() {
+            if(hoverEnable) {
+               changePageView($(this).hasClass('view-option-double') ? 'double' : 'single');
+            }
+        }).on('mouseleave', '.view-option', function() {
+            if(hoverEnable) {
+               changePageView(isDoubleView ? 'double' : 'single');
+            }
+        });
+
+        changePageView();
     };
 
     var init = function() {
@@ -1859,12 +2039,12 @@
         });
 
         // Load index.json
-        loadData(INDEX_JSON, function(data) {
+        loadData(INDEX_JSON, function(data, type) {
             var firstLoad = !sectionsShowed;
 
             displaySection(data);
 
-            if(!firstLoad) {
+            if(firstLoad) {
                 var q = getQueryString('q');
                 if(q) {
                     setTimeout(function() {
@@ -1965,12 +2145,13 @@
             lastScrollTop = $window.scrollTop();
             if(lastScrollTop > scrollHeight && !$body.hasClass('compact-mode')) {
                 toggleCompactMode(true);
-            } else if(!$body.hasClass('page-show')) {
+            }/* else if(!$body.hasClass('page-show')) {
                 $header.toggleClass('with-shadow', lastScrollTop > 20);
-            }
+            }*/
         }).on('keydown', function(e) {
             var code = e.which;
             var isPageNotShow = !$body.hasClass('page-show');
+            var isDoubleView = $body.hasClass('view-double');
             var isInputFocus = $body.hasClass('input-query-focus');
             if(code === 9) { // Tab
                 if(!$body.hasClass('input-query-focus')) {
@@ -1978,11 +2159,11 @@
                     e.preventDefault();
                 }
             } else if(code === 13) { // Enter
-                if(isPageNotShow && isChoosedSection()) {
+                if((isDoubleView || isPageNotShow) && isChoosedSection()) {
                     openSection();
                 }
             } else if(code === 27) { // Esc
-                if(!closePage()) {
+                if(!isDoubleView && !closePage()) {
                     if(!isInputFocus) {
                         $queryInput.focus();
                     }
@@ -1990,33 +2171,33 @@
                     query();
                 }
             } else if(code === 37) { // Left
-                // if(!$body.hasClass('input-query-focus')){
-                chooseLeftSection();
-                e.preventDefault();
-                // }
+                if(!isDoubleView){
+                    chooseLeftSection();
+                    e.preventDefault();
+                }
             } else if(code === 39) { // Right
-                // if(!$body.hasClass('input-query-focus')){
-                chooseRightSection();
-                e.preventDefault();
-                // }
-            } else if(code === 38) { // Top
-                if(isPageNotShow) {
+                if(!isDoubleView){
+                    chooseRightSection();
+                    e.preventDefault();
+                }
+            } else if(code === 38) { // Up
+                if(isPageNotShow || isDoubleView) {
                     choosePrevSection();
                     e.preventDefault();
                 } else {
                     scrollToThis($pageBody, 'up');
                 }
             } else if(code === 40) { // Down
-                if(isPageNotShow) {
+                if(isPageNotShow || isDoubleView) {
                     chooseNextSection();
                     e.preventDefault();
                 }
             }
         });
 
-        $pageBody.on('scroll', function(e) {
-            $page.toggleClass('with-shadow', $pageBody.scrollTop() > 20);
-        });
+        // $pageBody.on('scroll', function(e) {
+        //     $page.toggleClass('with-shadow', $pageBody.scrollTop() > 20);
+        // });
 
         $search = $('#search');
 
@@ -2066,16 +2247,26 @@
             }
         });
 
+        if(debug) {
+            $('#pageReloadBtn').on('click', function() {
+                loadPage(null, '!refresh', true);
+            });
+        }
+
+        initChangeView();
+
         // init code copy function
         initCopyable();
 
         // init theme
         initTheme();
 
-        // init tooltip
-        $('[data-toggle="tooltip"]').tooltip({
-            container: 'body'
-        });
+        if(!isTouchScreen) {
+            // init tooltip
+            $('[data-toggle="tooltip"]').tooltip({
+                container: 'body'
+            });
+        }
     };
 
     init();
