@@ -1,8 +1,8 @@
 /*!
- * ZUI: Document - v1.5.0 - 2016-12-11
+ * ZUI: Document - v1.6.0 - 2017-03-16
  * http://zui.sexy
  * GitHub: https://github.com/easysoft/zui.git 
- * Copyright (c) 2016 cnezsoft.com; Licensed MIT
+ * Copyright (c) 2017 cnezsoft.com; Licensed MIT
  */
 
 /* ========================================================================
@@ -94,7 +94,7 @@
         ZUI_JSON = debug ? 'zui.json' : 'docs/zui.min.json',
         ZUI_CUSTOM_JSON = 'zui.custom.json',
         UNDEFINED = undefined,
-        isNewRelease = (new Date().getTime()) < 1483027200000, // 2016/12/30
+        isNewRelease = (new Date().getTime()) < 1504195200000, // 2017/8/1
         dataVersion,
         storageEnable,
         docIndex, iconsIndex, currentSection,
@@ -2163,6 +2163,7 @@
                     openSection();
                 }
             } else if(code === 27) { // Esc
+                if($('body>.modal-backdrop').length) return;
                 if(!isDoubleView && !closePage()) {
                     if(!isInputFocus) {
                         $queryInput.focus();

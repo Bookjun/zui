@@ -11,7 +11,7 @@ Chosen是用来增强单选列表和多选列表的更佳选择。
 
 <div class="alert alert-danger">
   <h4>兼容性问题</h4>
-  <p>在触摸屏及移动设备上无法获取最佳体验。</p>
+  <p>在触摸屏及移动设备上无法启用 Chosen。</p>
 </div>
 
 ## 示例
@@ -43,7 +43,7 @@ Chosen是用来增强单选列表和多选列表的更佳选择。
   </div>
 </div>
 
-```
+```js
 $('select.chosen-select').chosen({
     no_results_text: '没有找到',    // 当检索时没有找到匹配项时显示的提示文本
     disable_search_threshold: 10, // 10 个以下的选择项则不显示检索框
@@ -246,7 +246,7 @@ Chosen的事件绑定在原始`<select>`上，使用jQuery方法来监听事件�
   </tbody>
 </table>
 
-```
+```js
 $('select.chosen-select').on('change', function(){
     // 用户改变了选择，快快处理
 });
@@ -256,7 +256,7 @@ $('select.chosen-select').on('change', function(){
 
 可以通过触发事件来调用chosen的方法。
 
-```
+```js
 // 当原始select中的选项发生变化时通知chosen更新选项列表
 $('select.chosen-select').trigger('chosen:updated');
 ```
@@ -304,7 +304,7 @@ $('select.chosen-select').trigger('chosen:updated');
   </form>
 </div>
 
-```
+```js
 $('select.chosen-icons').chosenIcons(options);
 ```
 

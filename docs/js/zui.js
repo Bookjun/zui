@@ -1,8 +1,8 @@
 /*!
- * ZUI: ZUI for official website - v1.5.0 - 2016-12-11
+ * ZUI: ZUI for official website - v1.6.0 - 2017-03-16
  * http://zui.sexy
  * GitHub: https://github.com/easysoft/zui.git 
- * Copyright (c) 2016 cnezsoft.com; Licensed MIT
+ * Copyright (c) 2017 cnezsoft.com; Licensed MIT
  */
 
 /*! Some code copy from Bootstrap v3.0.0 by @fat and @mdo. (Copyright 2013 Twitter, Inc. Licensed under http://www.apache.org/licenses/)*/
@@ -328,6 +328,31 @@
         };
     }
 }());
+
+/* ========================================================================
+ * ZUI: typography.js
+ * http://zui.sexy
+ * ========================================================================
+ * Copyright (c) 2014-2016 cnezsoft.com; Licensed MIT
+ * ======================================================================== */
+
+
+(function($) {
+    'use strict';
+
+    $.fn.fixOlPd = function(pd) {
+        pd = pd || 10;
+        return this.each(function() {
+            var $ol = $(this);
+            $ol.css('paddingLeft', Math.ceil(Math.log10($ol.children().length)) * pd + 10);
+        });
+    };
+
+    $(function() {
+        $('.ol-pd-fix,.article ol').fixOlPd();
+    });
+}(jQuery));
+
 
 /* ========================================================================
  * Bootstrap: button.js v3.0.3
@@ -2009,98 +2034,76 @@
  * ======================================================================== */
 
 
-(function($) {
+(function($, document) {
     'use strict';
 
-    var Draggable = function(element, options) {
-        this.$ = $(element);
-        this.options = this.getOptions(options);
-        this.init();
-    };
-
-    Draggable.DEFAULTS = {
+    var NAME     = 'zui.draggable',
+        DEFAULTS = {
+        // selector: '',
         container: 'body',
         move: true
     };
+    var idIncrementer = 0;
 
-    Draggable.prototype.getOptions = function(options) {
-        options = $.extend({}, Draggable.DEFAULTS, this.$.data(), options);
-        return options;
+    var Draggable = function(element, options) {
+        var that     = this;
+        that.$       = $(element);
+        that.id      = idIncrementer++;
+        that.options = $.extend({}, DEFAULTS, that.$.data(), options);
+        that.init();
     };
+
+    Draggable.DEFAULTS = DEFAULTS;
+    Draggable.NAME     = NAME;
 
     Draggable.prototype.init = function() {
-        this.handleMouseEvents();
-    };
-
-    Draggable.prototype.handleMouseEvents = function() {
-        var $e = this.$,
-            BEFORE = 'before',
-            DRAG = 'drag',
-            FINISH = 'finish',
-            setting = this.options,
-            startPos, cPos, startOffset, mousePos, moved;
-
-        var mouseDown = function(event) {
-            if($.isFunction(setting[BEFORE])) {
-                var isSure = setting[BEFORE]({
-                    event: event,
-                    element: $e
-                });
-                if(isSure === false) return;
-            }
-
-            var $container = $(setting.container),
-                pos = $e.offset();
-            cPos = $container.offset();
-            startPos = {
-                x: event.pageX,
-                y: event.pageY
-            };
-            startOffset = {
-                x: event.pageX - pos.left + cPos.left,
-                y: event.pageY - pos.top + cPos.top
-            };
-            mousePos = $.extend({}, startPos);
-            moved = false;
-
-            $e.addClass('drag-ready');
-            $(document).bind('mousemove', mouseMove).bind('mouseup', mouseUp);
-            event.preventDefault();
-            if(setting.stopPropagation) {
-                event.stopPropagation();
-            }
-        };
+        var that           = this,
+            $root          = that.$,
+            BEFORE         = 'before',
+            DRAG           = 'drag',
+            FINISH         = 'finish',
+            eventSuffix    = '.' + NAME + '.' + that.id,
+            mouseDownEvent = 'mousedown' + eventSuffix,
+            mouseUpEvent   = 'mouseup' + eventSuffix,
+            mouseMoveEvent = 'mousemove' + eventSuffix,
+            setting        = that.options,
+            selector       = setting.selector,
+            handle         = setting.handle,
+            $ele           = $root,
+            startPos,
+            cPos,
+            startOffset,
+            mousePos,
+            moved;
 
         var mouseMove = function(event) {
-            moved = true;
-            var mX = event.pageX,
-                mY = event.pageY;
+            var mX      = event.pageX,
+                mY      = event.pageY;
+                moved   = true;
             var dragPos = {
                 left: mX - startOffset.x,
                 top: mY - startOffset.y
             };
 
-            $e.removeClass('drag-ready').addClass('dragging');
+            $ele.removeClass('drag-ready').addClass('dragging');
             if(setting.move) {
-                $e.css(dragPos);
+                $ele.css(dragPos);
             }
 
-            if($.isFunction(setting[DRAG])) {
-                setting[DRAG]({
-                    event: event,
-                    element: $e,
-                    startOffset: startOffset,
-                    pos: dragPos,
-                    offset: {
-                        x: mX - startPos.x,
-                        y: mY - startPos.y
-                    },
-                    smallOffset: {
-                        x: mX - mousePos.x,
-                        y: mY - mousePos.y
-                    }
-                });
-            }
+            setting[DRAG] && setting[DRAG]({
+                event: event,
+                element: $ele,
+                startOffset: startOffset,
+                pos: dragPos,
+                offset: {
+                    x: mX - startPos.x,
+                    y: mY - startPos.y
+                },
+                smallOffset: {
+                    x: mX - mousePos.x,
+                    y: mY - mousePos.y
+                }
+            });
             mousePos.x = mX;
             mousePos.y = mY;
 
@@ -2110,63 +2113,107 @@
         };
 
         var mouseUp = function(event) {
-            $(document).unbind('mousemove', mouseMove).unbind('mouseup', mouseUp);
+            $(document).off(eventSuffix);
             if(!moved) {
-                $e.removeClass('drag-ready');
+                $ele.removeClass('drag-ready');
                 return;
             }
             var endPos = {
                 left: event.pageX - startOffset.x,
                 top: event.pageY - startOffset.y
             };
-            $e.removeClass('drag-ready').removeClass('dragging');
+            $ele.removeClass('drag-ready dragging');
             if(setting.move) {
-                $e.css(endPos);
+                $ele.css(endPos);
             }
 
-            if($.isFunction(setting[FINISH])) {
-                setting[FINISH]({
-                    event: event,
-                    element: $e,
-                    startOffset: startOffset,
-                    pos: endPos,
-                    offset: {
-                        x: event.pageX - startPos.x,
-                        y: event.pageY - startPos.y
-                    },
-                    smallOffset: {
-                        x: event.pageX - mousePos.x,
-                        y: event.pageY - mousePos.y
-                    }
-                });
-            }
+            setting[FINISH] && setting[FINISH]({
+                event: event,
+                element: $ele,
+                startOffset: startOffset,
+                pos: endPos,
+                offset: {
+                    x: event.pageX - startPos.x,
+                    y: event.pageY - startPos.y
+                },
+                smallOffset: {
+                    x: event.pageX - mousePos.x,
+                    y: event.pageY - mousePos.y
+                }
+            });
             event.preventDefault();
             if(setting.stopPropagation) {
                 event.stopPropagation();
             }
         };
 
-        if(setting.handle) {
-            $e.on('mousedown', setting.handle, mouseDown);
+        var mouseDown = function(event) {
+            var $mouseDownEle = $(this);
+            if(selector) {
+                $ele = handle ? $mouseDownEle.closest(selector) : $mouseDownEle;
+            }
+
+            if(setting[BEFORE]) {
+                var isSure = setting[BEFORE]({
+                    event: event,
+                    element: $ele
+                });
+                if(isSure === false) return;
+            }
+
+            var $container = $(setting.container),
+                pos        = $ele.offset();
+                cPos       = $container.offset();
+                startPos   = {
+                    x: event.pageX,
+                    y: event.pageY
+                };
+                startOffset = {
+                    x: event.pageX - pos.left + cPos.left,
+                    y: event.pageY - pos.top + cPos.top
+                };
+                mousePos    = $.extend({}, startPos);
+                moved       = false;
+
+            $ele.addClass('drag-ready');
+            event.preventDefault();
+
+            if(setting.stopPropagation) {
+                event.stopPropagation();
+            }
+
+            $(document).on(mouseMoveEvent, mouseMove).on(mouseUpEvent, mouseUp);
+        };
+
+        if(handle) {
+            $root.on(mouseDownEvent, handle, mouseDown);
+        } else if(selector) {
+            $root.on(mouseDownEvent, selector, mouseDown);
         } else {
-            $e.on('mousedown', mouseDown);
+            $root.on(mouseDownEvent, mouseDown);
         }
+    };
+
+    Draggable.prototype.destroy = function() {
+        var eventSuffix = '.' + NAME + '.' + this.id;
+        this.$.off(eventSuffix);
+        $(document).off(eventSuffix);
+        this.$.data(NAME, null);
     };
 
     $.fn.draggable = function(option) {
         return this.each(function() {
             var $this = $(this);
-            var data = $this.data('zui.draggable');
+            var data = $this.data(NAME);
             var options = typeof option == 'object' && option;
 
-            if(!data) $this.data('zui.draggable', (data = new Draggable(this, options)));
-
+            if(!data) $this.data(NAME, (data = new Draggable(this, options)));
             if(typeof option == 'string') data[option]();
         });
     };
 
     $.fn.draggable.Constructor = Draggable;
-}(jQuery));
+}(jQuery, document));
 
 
 /* ========================================================================
@@ -2180,260 +2227,304 @@
 (function($, document, Math) {
     'use strict';
 
-    var Droppable = function(element, options) {
-        this.$ = $(element);
-        this.options = this.getOptions(options);
-
-        this.init();
-    };
-
-    Droppable.DEFAULTS = {
-        container: 'body',
+    var NAME     = 'zui.droppable',
+        DEFAULTS = {
+        // container: '',
+        // selector: '',
+        // handle: '',
         // flex: false,
         // nested: false,
+        target: '.droppable-target',
         deviation: 5,
         sensorOffsetX: 0,
         sensorOffsetY: 0
     };
+    var idIncrementer = 0;
 
-    Droppable.prototype.getOptions = function(options) {
-        options = $.extend({}, Droppable.DEFAULTS, this.$.data(), options);
-        return options;
+    var Droppable = function(element, options) {
+        var that     = this;
+        that.id      = idIncrementer++;
+        that.$       = $(element);
+        that.options = $.extend({}, DEFAULTS, that.$.data(), options);
+        that.init();
     };
 
-    Droppable.prototype.callEvent = function(name, params) {
+    Droppable.DEFAULTS = DEFAULTS;
+    Droppable.NAME     = NAME;
+
+    Droppable.prototype.trigger = function(name, params) {
         return $.zui.callEvent(this.options[name], params, this);
     };
 
     Droppable.prototype.init = function() {
-        this.handleMouseEvents();
-    };
+        var that           = this,
+            $root          = that.$,
+            setting        = that.options,
+            deviation      = setting.deviation,
+            eventSuffix    = '.' + NAME + '.' + that.id,
+            mouseDownEvent = 'mousedown' + eventSuffix,
+            mouseUpEvent   = 'mouseup' + eventSuffix,
+            mouseMoveEvent = 'mousemove' + eventSuffix,
+            selector       = setting.selector,
+            handle         = setting.handle,
+            flex           = setting.flex,
+            container      = setting.container,
+            $ele           = $root,
+            isMouseDown    = false,
+            $container     = container ? $(setting.container).first() : (selector ? $root : $('body')),
+            $targets,
+            $target,
+            $shadow,
+            isIn,
+            isSelf,
+            oldCssPosition,
+            startOffset,
+            startMouseOffset,
+            containerOffset,
+            clickOffset,
+            mouseOffset,
+            lastMouseOffset,
+            mouseDownBackEventCall;
 
-    Droppable.prototype.handleMouseEvents = function() {
-        var $e = this.$,
-            self = this,
-            setting = this.options,
-            BEFORE = 'before';
+        var mouseMove = function(event) {
+            if(!isMouseDown) return;
 
-        this.$triggerTarget = (setting.trigger ? ($.isFunction(setting.trigger) ? setting.trigger($e) : $e.find(setting.trigger)).first() : $e);
+            mouseOffset = {left: event.pageX, top: event.pageY};
 
-        this.$triggerTarget.on('mousedown', function(event) {
-            if($.isFunction(setting[BEFORE])) {
-                var isSure = setting[BEFORE]({
-                    event: event,
-                    element: $e
+            // ignore small move
+            if(Math.abs(mouseOffset.left - startMouseOffset.left) < deviation && Math.abs(mouseOffset.top - startMouseOffset.top) < deviation) return;
+
+            if($shadow === null) // create shadow
+            {
+                var cssPosition = $container.css('position');
+                if(cssPosition != 'absolute' && cssPosition != 'relative' && cssPosition != 'fixed') {
+                    oldCssPosition = cssPosition;
+                    $container.css('position', 'relative');
+                }
+
+                $shadow = $ele.clone().removeClass('drag-from').addClass('drag-shadow').css({
+                    position:   'absolute',
+                    width:      $ele.outerWidth(),
+                    transition: 'none'
+                }).appendTo($container);
+                $ele.addClass('dragging');
+
+                that.trigger('start', {
+                    event:   event,
+                    element: $ele
                 });
-                if(isSure === false) return;
             }
 
-            var $targets = $.isFunction(setting.target) ? setting.target($e) : $(setting.target),
-                target = null,
-                shadow = null,
-                $container = $(setting.container).first(),
-                isIn = false,
-                isSelf = true,
-                oldCssPosition,
-                startOffset = $e.offset(),
-                startMouseOffset = {
-                    left: event.pageX,
-                    top: event.pageY
-                };
-            var containerOffset = $container.offset();
-            var clickOffset = {
+            var offset = {
+                left: mouseOffset.left - clickOffset.left,
+                top:  mouseOffset.top - clickOffset.top
+            };
+            var position = {
+                left: offset.left - containerOffset.left,
+                top:  offset.top - containerOffset.top
+            };
+            $shadow.css(position);
+            $.extend(lastMouseOffset, mouseOffset);
+
+            var isNew = false;
+                isIn = false;
+
+            if(!flex) {
+                $targets.removeClass('drop-to');
+            }
+
+            var $newTarget = null;
+            $targets.each(function() {
+                var t    = $(this),
+                    tPos = t.offset(),
+                    tW   = t.outerWidth(),
+                    tH   = t.outerHeight(),
+                    tX   = tPos.left + setting.sensorOffsetX,
+                    tY   = tPos.top + setting.sensorOffsetY;
+
+                if(mouseOffset.left > tX && mouseOffset.top > tY && mouseOffset.left < (tX + tW) && mouseOffset.top < (tY + tH)) {
+                    if($newTarget) $newTarget.removeClass('drop-to');
+                    $newTarget = t;
+                    if(!setting.nested) return false;
+                }
+            });
+
+            if($newTarget) {
+                isIn = true;
+                var id = $newTarget.data('id');
+                if($ele.data('id') != id) isSelf = false;
+                if($target === null || ($target.data('id') !== id && (!isSelf))) isNew = true;
+                $target = $newTarget;
+                if(flex) {
+                    $targets.removeClass('drop-to');
+                }
+                $target.addClass('drop-to');
+            }
+
+            if(!flex) {
+                $ele.toggleClass('drop-in', isIn);
+                $shadow.toggleClass('drop-in', isIn);
+            } else if($target !== null && $target.length) {
+                isIn = true;
+            }
+
+            that.trigger('drag', {
+                event: event,
+                isIn: isIn,
+                target: $target,
+                element: $ele,
+                isNew: isNew,
+                selfTarget: isSelf,
+                clickOffset: clickOffset,
+                offset: offset,
+                position: {
+                    left: offset.left - containerOffset.left,
+                    top: offset.top - containerOffset.top
+                },
+                mouseOffset: mouseOffset
+            });
+            event.preventDefault();
+        };
+
+        var mouseUp = function(event) {
+            $(document).off(eventSuffix);
+            clearTimeout(mouseDownBackEventCall);
+            if(!isMouseDown) return;
+
+            isMouseDown = false;
+
+            if(oldCssPosition) {
+                $container.css('position', oldCssPosition);
+            }
+
+            if($shadow === null) {
+                $ele.removeClass('drag-from');
+                that.trigger('always', {
+                    event: event,
+                    cancel: true
+                });
+                return;
+            }
+
+            if(!isIn) $target = null;
+            var isSure = true;
+            mouseOffset = event ? {
+                left: event.pageX,
+                top: event.pageY
+            } : lastMouseOffset;
+            var offset = {
+                left: mouseOffset.left - clickOffset.left,
+                top: mouseOffset.top - clickOffset.top
+            };
+            var moveOffset = {
+                left: mouseOffset.left - lastMouseOffset.left,
+                top: mouseOffset.top - lastMouseOffset.top
+            };
+            lastMouseOffset.left = mouseOffset.left;
+            lastMouseOffset.top = mouseOffset.top;
+            var eventOptions = {
+                event: event,
+                isIn: isIn,
+                target: $target,
+                element: $ele,
+                isNew: (!isSelf) && $target !== null,
+                selfTarget: isSelf,
+                offset: offset,
+                mouseOffset: mouseOffset,
+                position: {
+                    left: offset.left - containerOffset.left,
+                    top: offset.top - containerOffset.top
+                },
+                lastMouseOffset: lastMouseOffset,
+                moveOffset: moveOffset
+            };
+
+            isSure = that.trigger('beforeDrop', eventOptions);
+
+            if(isSure && isIn) {
+                that.trigger('drop', eventOptions);
+            }
+
+            $targets.removeClass('drop-to');
+            $ele.removeClass('dragging').removeClass('drag-from');
+            $shadow.remove();
+            $shadow = null;
+
+            that.trigger('finish', eventOptions);
+            that.trigger('always', eventOptions);
+
+            if(event) event.preventDefault();
+        };
+
+        var mouseDown = function(event) {
+            var $mouseDownEle = $(this);
+            if(selector) {
+                $ele = handle ? $mouseDownEle.closest(selector) : $mouseDownEle;
+            }
+
+            if($ele.hasClass('drag-shadow')) {
+                return;
+            }
+
+            if(setting['before']) {
+                if(setting['before']({
+                    event: event,
+                    element: $ele
+                }) === false) return;
+            }
+
+            isMouseDown = true;
+            $targets         = $.isFunction(setting.target) ? setting.target($root) : $container.find(setting.target),
+            $target          = null,
+            $shadow          = null,
+            isIn             = false,
+            isSelf           = true,
+            oldCssPosition   = null,
+            startOffset      = $ele.offset(),
+            containerOffset  = $container.offset();
+            startMouseOffset = {left: event.pageX, top: event.pageY};
+            lastMouseOffset  = $.extend({}, startMouseOffset);
+            clickOffset      = {
                 left: startMouseOffset.left - startOffset.left,
                 top: startMouseOffset.top - startOffset.top
             };
-            var lastMouseOffset = {
-                left: startMouseOffset.left,
-                top: startMouseOffset.top
-            };
 
-            $e.addClass('drag-from');
-            $(document).bind('mousemove', mouseMove).bind('mouseup', mouseUp);
+            $ele.addClass('drag-from');
+            $(document).on(mouseMoveEvent, mouseMove).on(mouseUpEvent, mouseUp);
+            mouseDownBackEventCall = setTimeout(function() {
+                $(document).on(mouseDownEvent, mouseUp);
+            }, 10);
             event.preventDefault();
+        };
 
-            function mouseMove(event) {
-                var mouseOffset = {
-                    left: event.pageX,
-                    top: event.pageY
-                };
+        if(handle) {
+            $root.on(mouseDownEvent, handle, mouseDown);
+        } else if(selector) {
+            $root.on(mouseDownEvent, selector, mouseDown);
+        } else {
+            $root.on(mouseDownEvent, mouseDown);
+        }
+    };
 
-                // ignore small move
-                if(Math.abs(mouseOffset.left - startMouseOffset.left) < setting.deviation && Math.abs(mouseOffset.top - startMouseOffset.top) < setting.deviation) return;
-
-                if(shadow === null) // create shadow
-                {
-                    var cssPosition = $container.css('position');
-                    if(cssPosition != 'absolute' && cssPosition != 'relative' && cssPosition != 'fixed') {
-                        oldCssPosition = cssPosition;
-                        $container.css('position', 'relative');
-                    }
-
-                    shadow = $e.clone().removeClass('drag-from').addClass('drag-shadow').css({
-                        position: 'absolute',
-                        width: $e.outerWidth(),
-                        transition: 'none'
-                    }).appendTo($container);
-                    $e.addClass('dragging');
-
-                    self.callEvent('start', {
-                        event: event,
-                        element: $e
-                    });
-                }
-
-                var offset = {
-                    left: mouseOffset.left - clickOffset.left,
-                    top: mouseOffset.top - clickOffset.top
-                };
-                var position = {
-                    left: offset.left - containerOffset.left,
-                    top: offset.top - containerOffset.top
-                };
-                shadow.css(position);
-                lastMouseOffset.left = mouseOffset.left;
-                lastMouseOffset.top = mouseOffset.top;
-
-                var isNew = false;
-                isIn = false;
-
-                if(!setting.flex) {
-                    $targets.removeClass('drop-to');
-                }
-
-                var newTarget = null;
-                $targets.each(function() {
-                    var t = $(this);
-                    var tPos = t.offset();
-                    var tW = t.outerWidth(),
-                        tH = t.outerHeight(),
-                        tX = tPos.left + setting.sensorOffsetX,
-                        tY = tPos.top + setting.sensorOffsetY;
-
-                    if(mouseOffset.left > tX && mouseOffset.top > tY && mouseOffset.left < (tX + tW) && mouseOffset.top < (tY + tH)) {
-                        if(newTarget) newTarget.removeClass('drop-to');
-                        newTarget = t;
-                        if(!setting.nested) return false;
-                    }
-                });
-
-                if(newTarget) {
-                    isIn = true;
-                    var id = newTarget.data('id');
-                    if($e.data('id') != id) isSelf = false;
-                    if(target === null || (target.data('id') !== id && (!isSelf))) isNew = true;
-                    target = newTarget;
-                    if(setting.flex) {
-                        $targets.removeClass('drop-to');
-                    }
-                    target.addClass('drop-to');
-                }
-
-                if(!setting.flex) {
-                    $e.toggleClass('drop-in', isIn);
-                    shadow.toggleClass('drop-in', isIn);
-                } else if(target !== null && target.length) {
-                    isIn = true;
-                }
-
-                self.callEvent('drag', {
-                    event: event,
-                    isIn: isIn,
-                    target: target,
-                    element: $e,
-                    isNew: isNew,
-                    selfTarget: isSelf,
-                    clickOffset: clickOffset,
-                    offset: offset,
-                    position: {
-                        left: offset.left - containerOffset.left,
-                        top: offset.top - containerOffset.top
-                    },
-                    mouseOffset: mouseOffset
-                });
-                event.preventDefault();
-            }
-
-            function mouseUp(event) {
-                if(oldCssPosition) {
-                    $container.css('position', oldCssPosition);
-                }
-
-                if(shadow === null) {
-                    $e.removeClass('drag-from');
-                    $(document).unbind('mousemove', mouseMove).unbind('mouseup', mouseUp);
-                    self.callEvent('always', {
-                        event: event,
-                        cancel: true
-                    });
-                    return;
-                }
-
-                if(!isIn) target = null;
-                var isSure = true,
-                    mouseOffset = {
-                        left: event.pageX,
-                        top: event.pageY
-                    };
-                var offset = {
-                    left: mouseOffset.left - clickOffset.left,
-                    top: mouseOffset.top - clickOffset.top
-                };
-                var moveOffset = {
-                    left: mouseOffset.left - lastMouseOffset.left,
-                    top: mouseOffset.top - lastMouseOffset.top
-                };
-                lastMouseOffset.left = mouseOffset.left;
-                lastMouseOffset.top = mouseOffset.top;
-                var eventOptions = {
-                    event: event,
-                    isIn: isIn,
-                    target: target,
-                    element: $e,
-                    isNew: (!isSelf) && target !== null,
-                    selfTarget: isSelf,
-                    offset: offset,
-                    mouseOffset: mouseOffset,
-                    position: {
-                        left: offset.left - containerOffset.left,
-                        top: offset.top - containerOffset.top
-                    },
-                    lastMouseOffset: lastMouseOffset,
-                    moveOffset: moveOffset
-                };
-
-                isSure = self.callEvent('beforeDrop', eventOptions);
-
-                if(isSure && isIn) {
-                    self.callEvent('drop', eventOptions);
-                }
-
-                $(document).unbind('mousemove', mouseMove).unbind('mouseup', mouseUp);
-                $targets.removeClass('drop-to');
-                $e.removeClass('dragging').removeClass('drag-from');
-                shadow.remove();
-
-                self.callEvent('finish', eventOptions);
-                self.callEvent('always', eventOptions);
-
-                event.preventDefault();
-            }
-        });
-
+    Droppable.prototype.destroy = function() {
+        var eventSuffix = '.' + NAME + '.' + this.id;
+        this.$.off(eventSuffix);
+        $(document).off(eventSuffix);
+        this.$.data(NAME, null);
     };
 
     Droppable.prototype.reset = function() {
-        this.$triggerTarget.off('mousedown');
-        this.handleMouseEvents();
+        this.destroy();
+        this.init();
     };
 
     $.fn.droppable = function(option) {
         return this.each(function() {
             var $this = $(this);
-            var data = $this.data('zui.droppable');
+            var data = $this.data(NAME);
             var options = typeof option == 'object' && option;
 
-            if(!data) $this.data('zui.droppable', (data = new Droppable(this, options)));
+            if(!data) $this.data(NAME, (data = new Droppable(this, options)));
 
             if(typeof option == 'string') data[option]();
         });
@@ -2451,7 +2542,7 @@
  * ======================================================================== */
 
 
-+ function($, window, document, Math) {
++ function($, window, document) {
     'use strict';
 
     if(!$.fn.droppable) {
@@ -2459,106 +2550,50 @@
         return;
     }
 
+    var NAME     = 'zui.sortable',
+        DEFAULTS = {
+            selector     : 'li,div',
+            dragCssClass : 'invisible',
+            sortingClass : 'sortable-sorting'
+        },
+        STR_ORDER = 'order';
+
     var Sortable = function(element, options) {
-        this.$ = $(element);
-        this.options = this.getOptions(options);
-
-        this.init();
+        var that     = this;
+        that.$       = $(element);
+        that.options = $.extend({}, DEFAULTS, that.$.data(), options);
+        that.init();
     };
 
-    Sortable.DEFAULTS = {
-        selector: 'li, div',
-        dragCssClass: 'invisible'
-    }; // default options
+    Sortable.DEFAULTS = DEFAULTS;
+    Sortable.NAME     = NAME;
 
-    Sortable.prototype.getOptions = function(options) {
-        options = $.extend({}, Sortable.DEFAULTS, this.$.data(), options);
-        return options;
-    };
+    Sortable.prototype.init = function($list) {
+        var that         = this,
+            $root        = that.$,
+            options      = that.options,
+            selector     = options.selector,
+            sortingClass = options.sortingClass,
+            dragCssClass = options.dragCssClass,
+            isReverse    = options.reverse;
 
-    Sortable.prototype.init = function() {
-        this.bindEventToList(this.$.children(this.options.selector));
-    };
-
-    Sortable.prototype.reset = function() {
-        var that = this,
-            order = 0;
-        var $list = this.$.children(this.options.selector).not('.drag-shadow');
-
-        $list.each(function() {
-            var $this = $(this);
-            if($this.data('zui.droppable')) {
-                $this.data('zui.droppable').options.target = $list;
-                $this.droppable('reset');
-            } else {
-                that.bindEventToList($list);
-                return false;
-            }
-        });
-    };
-
-    Sortable.prototype.bindEventToList = function($list) {
-        var self = this.$,
-            options = this.options;
-        var isReverse = options.reverse;
-
-        markOrders($list);
-        $list.droppable({
-            trigger: options.trigger,
-            target: self.children(options.selector),
-            container: self,
-            always: options.always,
-            flex: true,
-            before: options.before,
-            start: function(e) {
-                if(options.dragCssClass) e.element.addClass(options.dragCssClass);
-                $.zui.callEvent(options['start']);
-            },
-            drag: function(e) {
-                self.addClass('sortable-sorting');
-                if(e.isIn) {
-                    var $ele = e.element,
-                        $target = e.target;
-                    var eleOrder = $ele.attr('data-order'),
-                        targetOrder = $target.attr('data-order');
-                    if(eleOrder == targetOrder) return;
-                    else if(eleOrder > targetOrder) {
-                        $target[isReverse ? 'after' : 'before']($ele);
-                    } else {
-                        $target[isReverse ? 'before' : 'after']($ele);
-                    }
-                    var list = self.children(options.selector).not('.drag-shadow');
-                    markOrders(list);
-                    $.zui.callEvent(options['order'], {
-                        list: list,
-                        element: $ele
-                    });
-                }
-            },
-            finish: function(e) {
-                if(options.dragCssClass && e.element) e.element.removeClass(options.dragCssClass);
-                $.zui.callEvent(options['finish'], {
-                    list: self.children(options.selector),
-                    element: e.element
-                });
-                self.removeClass('sortable-sorting');
-            }
-        });
-
-        function markOrders(list) {
+        var markOrders = function($items) {
+            $items = $items || that.getItems(1);
             var orders = [];
-            list.each(function() {
-                var thisOrder = $(this).data('order');
-                if(typeof thisOrder === 'number') {
-                    orders.push(thisOrder);
+
+            $items.each(function() {
+                var order = $(this).data(STR_ORDER);
+                if(typeof order === 'number') {
+                    orders.push(order);
                 }
             });
+
             orders.sort(function(a, b) {
                 return a - b;
             });
 
-            var listSize = list.length;
-            while(orders.length < listSize) {
+            var itemsCount = $items.length;
+            while(orders.length < itemsCount) {
                 orders.push(orders.length ? (orders[orders.length - 1] + 1) : 0);
             }
 
@@ -2566,28 +2601,94 @@
                 orders.reverse();
             }
 
-            var listIndex = 0
-            list.each(function() {
-                $(this).attr('data-order', orders[listIndex++]);
+            $items.each(function(idx) {
+                $(this).data(STR_ORDER, orders[idx]).attr('data-' + STR_ORDER, orders[idx]);
+            });
+        };
+
+        markOrders();
+
+        $root.droppable({
+            handle   : options.trigger,
+            target   : selector,
+            selector : selector,
+            container: $root,
+            always   : options.always,
+            flex     : true,
+            before   : options.before,
+            start: function(e) {
+                if(dragCssClass) e.element.addClass(dragCssClass);
+                that.trigger('start');
+            },
+            drag: function(e) {
+                $root.addClass(sortingClass);
+                if(e.isIn) {
+                    var $ele        = e.element,
+                        $target     = e.target,
+                        eleOrder    = $ele.data(STR_ORDER),
+                        targetOrder = $target.data(STR_ORDER);
+                    if(eleOrder == targetOrder) return;
+                    else if(eleOrder > targetOrder) {
+                        $target[isReverse ? 'after' : 'before']($ele);
+                    } else {
+                        $target[isReverse ? 'before' : 'after']($ele);
+                    }
+                    var $items = that.getItems(1);
+                    markOrders($items);
+                    that.trigger(STR_ORDER, {
+                        list: $items,
+                        element: $ele
+                    });
+                }
+            },
+            finish: function(e) {
+                if(dragCssClass && e.element) e.element.removeClass(dragCssClass);
+                $root.removeClass(sortingClass);
+                that.trigger('finish', {
+                    list: that.getItems(1),
+                    element: e.element
+                });
+            }
+        });
+    };
+
+    Sortable.prototype.destroy = function() {
+        that.$.droppable('destroy');
+    };
+
+    Sortable.prototype.getItems = function(onlyElements) {
+        var $items = this.$.children(this.options.selector).not('.drag-shadow');
+        if(!onlyElements) {
+            return $items.map(function() {
+                var $item = $(this);
+                return {
+                    item: $item,
+                    order: $item.data('order')
+                };
             });
         }
+        return $items;
+    };
+
+    Sortable.prototype.trigger = function(name, params) {
+        return $.zui.callEvent(this.options[name], params, this);
     };
 
     $.fn.sortable = function(option) {
         return this.each(function() {
             var $this = $(this);
-            var data = $this.data('zui.sortable');
+            var data = $this.data(NAME);
             var options = typeof option == 'object' && option;
 
-            if(!data) $this.data('zui.sortable', (data = new Sortable(this, options)));
+            if(!data) $this.data(NAME, (data = new Sortable(this, options)));
             else if(typeof option == 'object') data.reset();
 
             if(typeof option == 'string') data[option]();
-        })
+        });
     };
 
     $.fn.sortable.Constructor = Sortable;
-}(jQuery, window, document, Math);
+}(jQuery, window, document);
 
 
 /* ========================================================================
@@ -3407,15 +3508,15 @@
     // ===============================
 
     var Tooltip = function(element, options) {
-        this.type =
-            this.options =
-            this.enabled =
-            this.timeout =
-            this.hoverState =
-            this.$element = null
+        this.type = null
+        this.options = null
+        this.enabled = null
+        this.timeout = null
+        this.hoverState = null
+        this.$element = null
 
         this.init('tooltip', element, options)
-    }
+    } 
 
     Tooltip.DEFAULTS = {
         animation: true,
@@ -3521,19 +3622,20 @@
         var e = $.Event('show.zui.' + this.type)
 
         if((content || this.hasContent()) && this.enabled) {
-            this.$element.trigger(e)
+            var that = this
+            that.$element.trigger(e)
 
             if(e.isDefaultPrevented()) return
 
-            var $tip = this.tip()
+            var $tip = that.tip()
 
-            this.setContent(content)
+            that.setContent(content)
 
-            if(this.options.animation) $tip.addClass('fade')
+            if(that.options.animation) $tip.addClass('fade')
 
-            var placement = typeof this.options.placement == 'function' ?
-                this.options.placement.call(this, $tip[0], this.$element[0]) :
-                this.options.placement
+            var placement = typeof that.options.placement == 'function' ?
+                that.options.placement.call(that, $tip[0], that.$element[0]) :
+                that.options.placement
 
             var autoToken = /\s?auto?\s?/i
             var autoPlace = autoToken.test(placement)
@@ -3548,20 +3650,20 @@
                 })
                 .addClass(placement)
 
-            this.options.container ? $tip.appendTo(this.options.container) : $tip.insertAfter(this.$element)
+            that.options.container ? $tip.appendTo(that.options.container) : $tip.insertAfter(that.$element)
 
-            var pos = this.getPosition()
+            var pos = that.getPosition()
             var actualWidth = $tip[0].offsetWidth
             var actualHeight = $tip[0].offsetHeight
 
             if(autoPlace) {
-                var $parent = this.$element.parent()
+                var $parent = that.$element.parent()
 
                 var orgPlacement = placement
                 var docScroll = document.documentElement.scrollTop || document.body.scrollTop
-                var parentWidth = this.options.container == 'body' ? window.innerWidth : $parent.outerWidth()
-                var parentHeight = this.options.container == 'body' ? window.innerHeight : $parent.outerHeight()
-                var parentLeft = this.options.container == 'body' ? 0 : $parent.offset().left
+                var parentWidth = that.options.container == 'body' ? window.innerWidth : $parent.outerWidth()
+                var parentHeight = that.options.container == 'body' ? window.innerHeight : $parent.outerHeight()
+                var parentLeft = that.options.container == 'body' ? 0 : $parent.offset().left
 
                 placement = placement == 'bottom' && pos.top + pos.height + actualHeight - docScroll > parentHeight ? 'top' :
                     placement == 'top' && pos.top - docScroll - actualHeight < 0 ? 'bottom' :
@@ -3574,10 +3676,22 @@
                     .addClass(placement)
             }
 
-            var calculatedOffset = this.getCalculatedOffset(placement, pos, actualWidth, actualHeight)
+            var calculatedOffset = that.getCalculatedOffset(placement, pos, actualWidth, actualHeight)
 
-            this.applyPlacement(calculatedOffset, placement)
-            this.$element.trigger('shown.zui.' + this.type)
+            that.applyPlacement(calculatedOffset, placement)
+            var complete = function () {
+                var prevHoverState = that.hoverState
+                that.$element.trigger('shown.bs.' + that.type)
+                that.hoverState = null
+
+                if (prevHoverState == 'out') that.leave(that)
+            }
+
+            $.support.transition && that.$tip.hasClass('fade') ?
+                $tip
+                  .one('bsTransitionEnd', complete)
+                  .emulateTransitionEnd(150) :
+                complete()
         }
     }
 
@@ -4671,7 +4785,7 @@
         
         that.id = options.id || (id++);
         var oldMessager = all[that.id];
-        if(oldMessager) oldMessager.destory();
+        if(oldMessager) oldMessager.destroy();
         all[that.id] = that;
         that.message = (options.icon ? '<i class="icon-' + options.icon + ' icon"></i> ' : '') + message;
 
@@ -4726,7 +4840,7 @@
 
         that.$.on('click', function(e) {
             if(options.onAction) {
-                result = options.onAction.call(this, 'content', null, that);
+                var result = options.onAction.call(this, 'content', null, that);
                 if(result === true) that.hide();
             }
         });
@@ -4829,11 +4943,13 @@
         that.isShow = false;
     };
 
-    Messager.prototype.destory = function() {
+    Messager.prototype.destroy = function() {
         var that = this;
-        that.hide(true);
-        that.$.remove();
-        that.$ = null;
+        that.hide(function()
+        {
+            that.$.remove();
+            that.$ = null;
+        }, true);
         delete all[that.id];
     };
 
@@ -4924,10 +5040,11 @@
     };
 
     Menu.prototype.init = function() {
-        var children = this.$.children('.nav');
-        children.find('.nav').closest('li').addClass('nav-parent');
-        children.find('.nav > li.active').closest('li').addClass('active');
-        children.find('.nav-parent > a').append('<i class="' + this.options.foldicon + ' nav-parent-fold-icon"></i>');
+        var $children = this.$.children('.nav');
+        $children.find('.nav').closest('li').addClass('nav-parent');
+        $children.find('.nav > li.active').parent().closest('li').addClass('active');
+        $children.find('.nav-parent > a').append('<i class="' + this.options.foldicon + ' nav-parent-fold-icon"></i>');
+        $children.find('.nav-parent.show').find('.nav-parent-fold-icon').addClass('icon-rotate-90');
 
         this.handleFold();
     };
@@ -4976,7 +5093,7 @@
     $.fn.menu.Constructor = Menu;
 
     $(function() {
-        $('[data-toggle="menu"]').menu();
+        $('[data-toggle="menu"],[data-ride="menu"]').menu();
     });
 }(jQuery));
 
@@ -5837,7 +5954,7 @@
  * ======================================================================== */
 
 
-(function($, Math) {
+(function($, Math, undefined) {
     'use strict';
 
     var dashboardMessager = $.zui.Messager ? new $.zui.Messager({placement: 'top', time: 1500, close: 0, scale: false, fade: false}) : 0;
@@ -5851,13 +5968,14 @@
     };
 
     Dashboard.DEFAULTS = {
+        minHeight: 100,
         height: 360,
         shadowType: 'normal',
         sensitive: false,
         circleShadowSize: 100,
         onlyRefreshBody: true,
-        resizable: true,
-        resizeMessage: true
+        resizable: true, // 'vertical', 'horizontal'
+        resizeMessage: false
     };
 
     Dashboard.prototype.getOptions = function(options) {
@@ -5954,7 +6072,7 @@
                 }, 100);
             }
 
-            $(document).bind('mousemove', mouseMove).bind('mouseup', mouseUp);
+            $(document).on('mousemove', mouseMove).on('mouseup', mouseUp);
             event.preventDefault();
 
             function mouseMove(event) {
@@ -6055,7 +6173,7 @@
                 dashboard.find('.panel-dragging').removeClass('panel-dragging');
                 row.find('.dragging-in').removeClass('dragging-in');
                 dashboard.removeClass('dashboard-dragging');
-                $(document).unbind('mousemove', mouseMove).unbind('mouseup', mouseUp);
+                $(document).off('mousemove', mouseMove).off('mouseup', mouseUp);
                 event.preventDefault();
             }
         });
@@ -6065,67 +6183,147 @@
         this.$.find('.panel-body > table, .panel-body > .list-group').parent().addClass('no-padding');
     };
 
-    Dashboard.prototype.handlePanelHeight = function() {
-        var dHeight = this.options.height;
+    Dashboard.prototype.updatePanelHeight = function() {
+        var that = this;
+        var defaultHeight = that.options.height;
+        var minHeight = that.options.minHeight;
+        var sizeConfig = {};
+        if(that.id && $.zui.store) {
+            sizeConfig = $.zui.store.pageGet('zui.dashboard.' + that.id + '.sizeConfig', sizeConfig);
+        }
 
         this.$.children('.row').each(function() {
-            var row = $(this);
-            var panels = row.find('.panel');
-            var height = row.data('height') || dHeight;
-
-            if(typeof height != 'number') {
-                height = 0;
-                panels.each(function() {
-                    height = Math.max(height, $(this).innerHeight());
+            var $row = $(this);
+            var rowWidth = $row.width();
+            var rows = [], row = [], calWidth = 0;
+            $row.children(':not(.dragging-col-holder)').each(function() {
+                var $col = $(this);
+                var colWidth = $col.width();
+                if(calWidth + colWidth > rowWidth) {
+                    if(row.length) rows.push(row);
+                    row = [$col];
+                    calWidth = colWidth;
+                } else {
+                    calWidth += colWidth;
+                    row.push($col);
+                }
+            });
+            if(row.length) rows.push(row);
+            if(rows.length) {
+                $.each(rows, function(rowId) {
+                    row = rows[rowId];
+                    var bestHeight = 0;
+                    var panels = [];
+                    var setNewHeight = false;
+                    $.each(row, function(colId) {
+                        var $col = row[colId].data('row-id', rowId);
+                        var $panel = $col.children('.panel:first');
+                        panels.push($panel);
+                        if(setNewHeight) return;
+                        var newHeight = $panel.data('newHeight');
+                        if(newHeight) {
+                            $panel.data('newHeight', null).data('height', newHeight);
+                            bestHeight = Math.max(minHeight, newHeight);
+                            setNewHeight = true;
+                        } else {
+                            var panelHeight = $panel.data('height') || sizeConfig[$panel.data('id')];
+                            if(panelHeight) bestHeight = Math.max(bestHeight, panelHeight);
+                        }
+                    });
+                    if(!bestHeight) {
+                        bestHeight = defaultHeight;
+                    }
+                    $.each(panels, function(idx) {
+                        var $panel = panels[idx].css('height', bestHeight);
+                        sizeConfig[$panel.data('id')] = $panel.data('height');
+                    });
                 });
             }
-
-            panels.css('height', height);
         });
+
+        if(that.id && $.zui.store) {
+            $.zui.store.pageSet('zui.dashboard.' + that.id + '.sizeConfig', sizeConfig);
+        }
+
+        return sizeConfig;
     };
 
     Dashboard.prototype.handleResizeEvent = function() {
-        var onResize = this.options.onResize;
-        var resizeMessage = this.options.resizeMessage;
+        var that = this;
+        var options = that.options;
+        var resizable = options.resizable;
+        var onResize = options.onResize;
+        var minHeight = options.minHeight;
+        var resizeMessage = options.resizeMessage;
         var messagerAvaliable = resizeMessage && dashboardMessager;
-        this.$.on('mousedown', '.resize-handle', function(e) {
-            var $col = $(this).parent().addClass('resizing');
+        that.$.on('mousedown', '.resize-handle', function(e) {
+            var $handle = $(this);
+            var isVertical = $handle.hasClass('resize-vertical');
+            var $col = $handle.parent()
+                .addClass('resizing')
+                .toggleClass('resizing-v', isVertical)
+                .toggleClass('resizing-h', !isVertical);
             var $row = $col.closest('.row');
-            var startX = e.pageX;
-            var startWidth = $col.width();
+            var $panel = $col.children('.panel');
+            var startX = e.pageX, startY = e.pageY;
+            var startWidth = $col.width(), startHeight = $panel.height();
             var rowWidth = $row.width();
             var oldGrid = Math.round(12*startWidth/rowWidth);
             var lastGrid = oldGrid;
-            $col.attr('data-grid', oldGrid);
+            if(!isVertical) $col.attr('data-grid', oldGrid);
 
             var mouseMove = function(event) {
-                var x = event.pageX;
-                var grid = Math.max(1, Math.min(12, Math.round(12 * (startWidth + (x - startX)) / rowWidth)));
-                if(lastGrid != grid) {
-                    $col.attr('data-grid', grid).css('width', (100*grid/12) + '%');
-                    if(messagerAvaliable) dashboardMessager[dashboardMessager.isShow ? 'update' : 'show'](Math.round(100*grid/12) + '% (' + grid + '/12)');
-                    lastGrid = grid;
+                if(isVertical) {
+                    $panel.css('height', Math.max(minHeight, startHeight + (event.pageY - startY)));
+                }
+                else {
+                    var x = event.pageX;
+                    var grid = Math.max(1, Math.min(12, Math.round(12 * (startWidth + (x - startX)) / rowWidth)));
+                    if(lastGrid != grid) {
+                        $col.attr('data-grid', grid).css('width', (100*grid/12) + '%');
+                        if(messagerAvaliable) dashboardMessager[dashboardMessager.isShow ? 'update' : 'show'](Math.round(100*grid/12) + '% (' + grid + '/12)');
+                        lastGrid = grid;
+                    }
                 }
                 event.preventDefault();
                 event.stopPropagation();
             };
 
             var mouseUp = function(event) {
-                $col.removeClass('resizing');
-                var lastGrid = $col.attr('data-grid');
-                if(oldGrid != lastGrid) {
-                    if($.isFunction(onResize)) {
-                        var revert = function() {
-                            $col.attr('data-grid', oldGrid).css('width', null);
-                        };
-                        var result = onResize({id: $col.children('.panel').data('id'), element: $col, old: oldGrid, grid: lastGrid, revert: revert});
-                        if(result === false) revert();
-                        else if(result !== true) {
-                            if(messagerAvaliable) dashboardMessager.show(Math.round(100*lastGrid/12) + '% (' + lastGrid + '/12)');
+                $col.removeClass('resizing resizing-v resizing-h');
+
+                if(isVertical) {
+                    var newHeight = Math.max(minHeight, startHeight + (event.pageY - startY));
+                    if(newHeight !== startHeight)
+                    {
+                        if($.isFunction(onResize))
+                        {
+                            var revert = function() {
+                                $panel.css('height', startHeight).data('height', startHeight);
+                                that.updatePanelHeight();
+                            };
+                            var result = onResize({type: 'vertical', id: $panel.data('id'), element: $col, old: startHeight, height: newHeight, revert: revert});
+                            if(result === false) revert();
+                        }
+                        $panel.css('height', newHeight).data('newHeight', newHeight);;
+                    }
+                } else {
+                    var lastGrid = $col.attr('data-grid');
+                    if(oldGrid != lastGrid) {
+                        if($.isFunction(onResize)) {
+                            var revert = function() {
+                                $col.attr('data-grid', oldGrid).css('width', null);
+                                that.updatePanelHeight();
+                            };
+                            var result = onResize({type: 'horizontal', id: $panel.data('id'), element: $col, old: oldGrid, grid: lastGrid, revert: revert});
+                            if(result === false) revert();
+                            else if(result !== true) {
+                                if(messagerAvaliable) dashboardMessager.show(Math.round(100*lastGrid/12) + '% (' + lastGrid + '/12)');
+                            }
                         }
                     }
                 }
-
+                that.updatePanelHeight();
                 $('body').off('mousemove.resize', mouseMove).off('mouseup.resize', mouseUp);
                 event.preventDefault();
                 event.stopPropagation();
@@ -6134,7 +6332,16 @@
             $('body').on('mousemove.resize', mouseMove).on('mouseup.resize', mouseUp);
             e.preventDefault();
             e.stopPropagation();
-        }).children('.row').children(':not(.dragging-col-holder)').append('<div class="resize-handle"><i class="icon icon-resize-h"></i></div>');
+        });
+        var $col = that.$.children('.row').children(':not(.dragging-col-holder)');
+        if(resizable === true || resizable === 'horizontal')
+        {
+            $col.append('<div class="resize-handle resize-horizontal"><i class="icon icon-resize-h"></i></div>');
+        }
+        if(resizable === true || resizable === 'vertical')
+        {
+            $col.append('<div class="resize-handle resize-vertical"><i class="icon icon-resize-v"></i></div>');
+        }
     };
 
     Dashboard.prototype.refresh = function($panel, onlyRefreshBody) {
@@ -6159,14 +6366,16 @@
             if($.isFunction(afterRefresh)) {
                 afterRefresh.call(this, {
                     result: true,
-                    data: data
+                    data: data,
+                    $panel: $panel
                 });
             }
         }).fail(function() {
             $panel.addClass('panel-error');
             if($.isFunction(afterRefresh)) {
                 afterRefresh.call(this, {
-                    result: false
+                    result: false,
+                    $panel: $panel
                 });
             }
         }).always(function() {
@@ -6196,11 +6405,13 @@
 
     Dashboard.prototype.init = function() {
         var options = this.options, that = this;
+        that.id = options.id ? options.id : that.$.attr('id');
         if(options.data) {
             var $row = $('<div class="row"/>');
             $.each(options.data, function(idx, config) {
                 var $col = $('<div class="col-sm-' + (config.colWidth || 4) + '"/>', config.colAttrs);
                 var $panel = $('<div class="panel" data-id="' + (config.id || $.zui.uuid()) + '"/>', config.panelAttrs);
+                if(config.height !== undefined) $panel.data('height', config.height);
                 if(config.content !== undefined) {
                     if($.isFunction(config.content)) {
                         var content = config.content($panel);
@@ -6216,7 +6427,7 @@
             that.$.append($row);
         }
 
-        that.handlePanelHeight();
+        that.updatePanelHeight();
         that.handlePanelPadding();
         that.handleRemoveEvent();
         that.handleRefreshEvent();
@@ -6253,7 +6464,7 @@
     };
 
     $.fn.dashboard.Constructor = Dashboard;
-}(jQuery, Math));
+}(jQuery, Math, undefined));
 
 
 /* ========================================================================
@@ -6325,14 +6536,12 @@
     Boards.prototype.bind = function(items) {
         var $boards = this.$,
             setting = this.options;
-        if(typeof(items) == 'undefined') {
-            items = $boards.find('.board-item:not(".disable-drop, .board-item-shadow")');
-        }
 
-        items.droppable($.extend({
+        $boards.droppable($.extend({
             before: setting.before,
             target: '.board-item:not(".disable-drop, .board-item-shadow")',
             flex: true,
+            selector: '.board-item:not(".disable-drop, .board-item-shadow")',
             start: function(e) {
                 $boards.addClass('dragging').find('.board-item-shadow').height(e.element.outerHeight());
             },
@@ -6394,6 +6603,12 @@
     var name = 'zui.datatable';
     var store = $.zui.store;
 
+    /**
+     * Datatable class
+     * 
+     * @param object element           DOM element or jquery element
+     * @param object options           Datatable options
+     */
     var DataTable = function(element, options) {
         this.name = name;
         this.$ = $(element);
@@ -6662,8 +6877,6 @@
                     'data-type': col.type,
                     style: col.css
                 });
-
-
             $tr.append($th);
         }
 
@@ -6977,7 +7190,7 @@
             var syncChecks = function() {
                 var $checkRows = $rowsSpans.first().find('.table > tbody > tr');
                 var $checkedRows = $checkRows.filter('.' + checkedClass);
-                $checkRows.find('.check-row input:checkbox').prop('checked', false);
+                if(options.checkboxName) $checkRows.find('.check-row input:checkbox').prop('checked', false);
                 var checkedStatus = {
                     checkedAll: $checkRows.length === $checkedRows.length && $checkedRows.length > 0,
                     checks: $checkedRows.map(function() {
@@ -7166,7 +7379,6 @@
         if(!$th.length) {
             return;
         }
-
 
         var data = this.data;
         var cols = data.cols,
@@ -7820,7 +8032,7 @@
 
 (function($, window) {
     'use strict';
-    var name = 'zui.calendar';
+    var NAME = 'zui.calendar';
     var NUMBER_TYPE_NAME = 'number';
     var STRING_TYPE_NAME = 'string';
     var UNDEFINED_TYPE_NAME = 'undefined';
@@ -7867,11 +8079,11 @@
         };
 
     var Calendar = function(element, options) {
-        this.name = name;
+        this.name = NAME;
         this.$ = $(element);
-        this.id = this.$.attr('id') || (name + $.zui.uuid());
+        this.id = this.$.attr('id') || (NAME + $.zui.uuid());
         this.$.attr('id', this.id);
-        this.storeName = name + '.' + this.id;
+        this.storeName = NAME + '.' + this.id;
 
         this.getOptions(options);
         this.getLang();
@@ -7967,8 +8179,10 @@
         }
 
         events.sort(function(a, b) {
-            return a.start > b.start ? 1 : (a.start < b.start ? (-1) : 0);
+            return a.start < b.start ? 1 : (a.start > b.start ? (-1) : 0);
         });
+
+        this.events = events;
     };
 
     Calendar.prototype.bindEvents = function() {
@@ -8243,13 +8457,12 @@
         var that = this;
         date = date || that.date;
         var options = that.options,
-            self = that,
             lang = that.lang,
             i,
             $views = that.$views,
             $e = that.$;
 
-        var $view = self.$monthView;
+        var $view = that.$monthView;
         if(!$view.length) {
             $view = $('<div class="calendar-view month"><table class="table table-bordered"><thead><tr class="week-head"></tr></thead><tbody class="month-days"></tbody></table></div>');
 
@@ -8270,7 +8483,7 @@
             }
 
             $views.append($view);
-            self.$monthView = $view;
+            that.$monthView = $view;
         }
 
         var $weeks = $view.find('.week-days'),
@@ -8375,13 +8588,16 @@
         }
 
         if(options.dragThenDrop) {
-            if($.fn.droppable) {
-                $view.find('.event').droppable({
-                    target: $days,
-                    container: $view,
+            if(!$.fn.droppable) {
+                return console.error('Calendar dragThenDrop option requires droppable.js');
+            }
+            if(!$view.data('zui.droppable')) {
+                $view.droppable({
+                    target: '.day',
+                    selector: '.event',
                     flex: true,
                     start: function() {
-                        $e.addClass('event-dragging');
+                        that.$.addClass('event-dragging');
                     },
                     drop: function(e) {
                         var et = e.element.data('event'),
@@ -8394,7 +8610,7 @@
                             newDate.setMinutes(startDate.getMinutes());
                             newDate.setSeconds(startDate.getSeconds());
 
-                            if(self.callEvent('beforeChange', {
+                            if(that.callEvent('beforeChange', {
                                     event: et,
                                     change: 'start',
                                     to: newDate
@@ -8406,8 +8622,8 @@
 
                                 that.display();
 
-                                self.callEvent('change', {
-                                    data: self.data,
+                                that.callEvent('change', {
+                                    data: that.data,
                                     changes: [{
                                         event: et,
                                         changes: [{
@@ -8425,11 +8641,9 @@
                         }
                     },
                     finish: function() {
-                        $e.removeClass('event-dragging');
+                        that.$.removeClass('event-dragging');
                     }
                 });
-            } else {
-                console.error('Calendar dragThenDrop option requires droppable.js');
             }
         }
     };
@@ -8480,17 +8694,17 @@
     };
 
     Calendar.prototype.callEvent = function(name, params) {
-        var result = this.$.callEvent(name + '.' + this.name, params, this);
+        var result = this.$.callEvent(name + '.' + NAME, params, this);
         return !(result.result !== undefined && (!result.result));
     };
 
     $.fn.calendar = function(option) {
         return this.each(function() {
             var $this = $(this);
-            var data = $this.data(name);
+            var data = $this.data(NAME);
             var options = typeof option == 'object' && option;
 
-            if(!data) $this.data(name, (data = new Calendar(this, options)));
+            if(!data) $this.data(NAME, (data = new Calendar(this, options)));
 
             if(typeof option == STRING_TYPE_NAME) data[option]();
         });
@@ -10141,10 +10355,10 @@ MIT License, https://github.com/harvesthq/chosen/blob/master/LICENSE.md
 
 
 /*!
- * ZUI: Generated from less code - v1.5.0 - 2016-12-11
+ * ZUI: Generated from less code - v1.6.0 - 2017-03-16
  * http://zui.sexy
  * GitHub: https://github.com/easysoft/zui.git 
- * Copyright (c) 2016 cnezsoft.com; Licensed MIT
+ * Copyright (c) 2017 cnezsoft.com; Licensed MIT
  */
 
 (function($) {
@@ -10288,6 +10502,14 @@ MIT License, https://github.com/harvesthq/chosen/blob/master/LICENSE.md
             animationSteps: 60,
 
             // String - Animation easing effect
+            // Possible effects are:
+            // [easeInOutQuart, linear, easeOutBounce, easeInBack, easeInOutQuad,
+            //  easeOutQuart, easeOutQuad, easeInOutBounce, easeOutSine, easeInOutCubic,
+            //  easeInExpo, easeInOutBack, easeInCirc, easeInOutElastic, easeOutBack,
+            //  easeInQuad, easeInOutExpo, easeInQuart, easeOutQuint, easeInOutCirc,
+            //  easeInSine, easeOutExpo, easeOutCirc, easeOutCubic, easeInQuint,
+            //  easeInElastic, easeInOutSine, easeInOutQuint, easeInBounce,
+            //  easeOutElastic, easeInCubic]
             animationEasing: "easeOutQuart",
 
             // Boolean - If we should show the scale at all
@@ -10395,7 +10617,7 @@ MIT License, https://github.com/harvesthq/chosen/blob/master/LICENSE.md
             tooltipTemplate: "<%if (label){%><%=label%>: <%}%><%= value %>",
 
             // String - Template string for single tooltips
-            multiTooltipTemplate: "<%= value %>",
+            multiTooltipTemplate: "<%if (datasetLabel){%><%=datasetLabel%>: <%}%><%= value %>",
 
             // String - Colour behind the legend colour block
             multiTooltipKeyBackground: '#fff',
@@ -13968,6 +14190,9 @@ MIT License, https://github.com/harvesthq/chosen/blob/master/LICENSE.md
     };
 
     ColorPicker.prototype.addColor = function(color) {
+        if(!(color instanceof $.zui.Color)) {
+            color = new $.zui.Color(color);
+        }
         var hex = color.toCssStr(),
             options = this.options;
 
@@ -14180,15 +14405,20 @@ MIT License, https://github.com/harvesthq/chosen/blob/master/LICENSE.md
                 }
                 if(handleResult !== true) {
                     that.selections[id] = isSelect ? that.selectOrder++ : false;
-                    var selected = [];
-                    $.each(that.selections, function(thisId, thisIsSelected) {
-                        if(thisIsSelected) selected.push(thisId);
-                    });
-                    that.callEvent(isSelect ? 'select' : 'unselect', {id: id, selections: that.selections, target: $element, selected: selected}, that);
+                    that.callEvent(isSelect ? 'select' : 'unselect', {id: id, selections: that.selections, target: $element, selected: that.getSelectedArray()}, that);
                 }
             }
             $element.toggleClass(that.options.selectClass, isSelect);
         }
+    };
+
+    Selectable.prototype.getSelectedArray = function()
+    {
+        var selected = [];
+        $.each(this.selections, function(thisId, thisIsSelected) {
+            if(thisIsSelected) selected.push(thisId);
+        });
+        return selected;
     };
 
     Selectable.prototype._init = function() {
@@ -14199,6 +14429,9 @@ MIT License, https://github.com/harvesthq/chosen/blob/master/LICENSE.md
         var startX, startY, $range, range, x, y, checkRangeCall;
         var checkFunc = $.isFunction(options.checkFunc) ? options.checkFunc : null;
         var rangeFunc = $.isFunction(options.rangeFunc) ? options.rangeFunc : null;
+        var isMouseDown    = false;
+        var mouseDownBackEventCall = null;
+        var mouseDownEventName = 'mousedown' + eventNamespace;
 
         var checkRange = function() {
             if(!range) return;
@@ -14231,6 +14464,7 @@ MIT License, https://github.com/harvesthq/chosen/blob/master/LICENSE.md
         };
 
         var mousemove = function(e) {
+            if(!isMouseDown) return;
             x = e.pageX;
             y = e.pageY;
             range = {
@@ -14263,6 +14497,9 @@ MIT License, https://github.com/harvesthq/chosen/blob/master/LICENSE.md
 
         var mouseup = function(e) {
             $(document).off(eventNamespace);
+            clearTimeout(mouseDownBackEventCall);
+            if(!isMouseDown) return;
+            isMouseDown = false;
             if($range) $range.remove();
             if(!isIgnoreMove)
             {
@@ -14271,16 +14508,15 @@ MIT License, https://github.com/harvesthq/chosen/blob/master/LICENSE.md
                     checkRange();
                     range = null;
                 }
-                var selected = [];
-                $.each(that.selections, function(thisId, thisIsSelected) {
-                    if(thisIsSelected) selected.push(thisId);
-                });
             }
-            that.callEvent('finish', {selections: that.selections, selected: selected});
+            that.callEvent('finish', {selections: that.selections, selected: that.getSelectedArray()});
             e.preventDefault();
         };
 
         var mousedown = function(e) {
+            if(isMouseDown) {
+                return mouseup(e);
+            }
             if(that.altKey || e.which === 3 || that.callEvent('start', e) === false) {
                 return;
             }
@@ -14301,6 +14537,7 @@ MIT License, https://github.com/harvesthq/chosen/blob/master/LICENSE.md
             }
 
             if(that.callEvent('startDrag', e) === false) {
+                that.callEvent('finish', {selections: that.selections, selected: that.getSelectedArray()});
                 return;
             }
 
@@ -14309,16 +14546,20 @@ MIT License, https://github.com/harvesthq/chosen/blob/master/LICENSE.md
 
             $range = null;
             isIgnoreMove = true;
+            isMouseDown = true;
 
             $(document).on('mousemove' + eventNamespace, mousemove).on('mouseup' + eventNamespace, mouseup);
+            mouseDownBackEventCall = setTimeout(function() {
+                $(document).on(mouseDownEventName, mouseup);
+            }, 10);
             e.preventDefault();
         };
 
         var $container = options.container && options.container !== 'default' ? $(options.container) : this.$;
         if(options.trigger) {
-            $container.on('mousedown' + eventNamespace, options.trigger, mousedown);
+            $container.on(mouseDownEventName, options.trigger, mousedown);
         } else {
-            $container.on('mousedown' + eventNamespace, mousedown);
+            $container.on(mouseDownEventName, mousedown);
         }
 
         $(document).on('keydown', function(e) {

@@ -1,5 +1,5 @@
 {
-    "version": "1.5.0.3",
+    "version": "1.6.0.2",
     "updateTime": "2016-09-09 09:26:10",
     "chapters": {
         "contribution": {
@@ -145,6 +145,15 @@
                 "topics": [],
                 "filter": "mzui yidongqianduankuangjia flex"
             }, {
+                "id": "xuanxuan",
+                "name": "喧喧：开源免费IM通讯方案",
+                "desc": "开源、免费、安全、跨平台的即时通讯方案",
+                "icon": "喧",
+                "url": "http://xuanxuan.chat",
+                "version": "1.6.0",
+                "topics": [],
+                "filter": "xuanxuan im"
+            }, {
                 "id": "zentaopms",
                 "name": "禅道项目管理",
                 "desc": "以开源的方式做最专业的研发项目管理软件！",
@@ -229,6 +238,9 @@
                 "filter": "qqtaolun qqtl",
                 "topics": [{
                     "name": "官方QQ群：384135104",
+                    "url": null
+                }, {
+                    "name": "加群暗号：ZUI is sexy",
                     "url": null
                 }]
             }, {
@@ -495,7 +507,7 @@
                 "icon": "icon-star",
                 "id": "icon",
                 "name": "图标",
-                "update": "1.5.0",
+                "update": "1.6.0",
                 "topics": [{
                     "name": "搜索图标",
                     "url": "#search/icon:"
@@ -580,6 +592,22 @@
                     "name": "内联形式"
                 }],
                 "filter": "duoxuanhedanxuankuang dxhdx radio"
+            }, {
+                "desc": "使用复选框实现的开关控件",
+                "icon": "icon-toggle-on",
+                "id": "switch",
+                "name": "开关",
+                "version": "1.6.0",
+                "topics": [{
+                    "name": "普通示例"
+                }, {
+                    "name": "对齐"
+                }, {
+                    "name": "内联样式"
+                }, {
+                    "name": "禁用"
+                }],
+                "filter": "kaiguan kg checkbox toggle"
             }, {
                 "desc": "面包屑导航",
                 "icon": "icon-map-marker",
@@ -718,6 +746,7 @@
                 "icon": "icon-anchor",
                 "desc": "多种样式的导航菜单",
                 "name": "导航",
+                "update": "1.6.0",
                 "topics": [{
                     "name": "主要导航"
                 }, {
@@ -760,8 +789,11 @@
                 "icon": "icon-list-ul",
                 "desc": "垂直方向的导航菜单",
                 "name": "垂直菜单",
+                "update": "1.6.0",
                 "topics": [{
                     "name": "实例"
+                }, {
+                    "name": "激活选中项"
                 }],
                 "filter": "chuizhicaidan czcd"
             }, {
@@ -907,7 +939,7 @@
                 "icon": "icon-align-justify",
                 "desc": "浮动在页面之上的垂直菜单",
                 "name": "下拉菜单",
-                "update": "1.5.0",
+                "update": "1.6.0",
                 "topics": [{
                     "name": "结构"
                 }, {
@@ -933,11 +965,13 @@
                 "icon": "icon-credit",
                 "desc": "标签页式的导航菜单",
                 "name": "标签页",
-                "update": "1.5.0",
+                "update": "1.6.0",
                 "topics": [{
                     "name": "结构"
                 }, {
                     "name": "动画效果"
+                }, {
+                    "name": "垂直标签页"
                 }, {
                     "name": "方法"
                 }, {
@@ -949,7 +983,7 @@
                 "icon": "icon-comment-alt",
                 "desc": "漂浮在页面之上的无打断消息",
                 "name": "漂浮消息",
-                "update": "1.5.0",
+                "update": "1.6.0",
                 "topics": [{
                     "name": "示例"
                 }, {
@@ -967,13 +1001,15 @@
             }, {
                 "id": "tooltip",
                 "icon": "icon-chat",
-                "desc": "为元素额外提供消息文本",
+                "desc": "为元素额外提供消息文本（工具提示）",
                 "name": "提示消息",
-                "update": "1.5.0",
+                "update": "1.6.0",
                 "topics": [{
                     "name": "示例"
                 }, {
-                    "name": "不同方向的提示"
+                    "name": "弹出方向"
+                }, {
+                    "name": "外观"
                 }, {
                     "name": "选项"
                 }, {
@@ -981,21 +1017,25 @@
                 }, {
                     "name": "事件"
                 }],
-                "filter": "tishixiaoxi tsxx"
+                "filter": "tishixiaoxi tsxx gjts gongjutishi"
             }, {
                 "id": "popover",
                 "icon": "icon-comment-line",
-                "desc": "弹出交互式面板",
+                "desc": "弹出交互式面板（提示面板）",
                 "name": "弹出面板",
-                "update": "1.5.0",
+                "update": "1.6.0",
                 "topics": [{
                     "name": "静态类型"
                 }, {
                     "name": "动态演示"
                 }, {
+                    "name": "弹出方向"
+                }, {
+                    "name": "外观"
+                }, {
                     "name": "用法"
                 }],
-                "filter": "tanchumianban tcmb"
+                "filter": "tanchumianban tcmb tishimianban tsmb"
             }, {
                 "id": "collapse",
                 "icon": "icon-collapse",
@@ -1028,6 +1068,7 @@
                 "icon": "icon-calendar",
                 "desc": "为文本框提供方便的日期时间选择功能",
                 "name": "日期选择",
+                "update": "1.6.0",
                 "topics": [{
                     "name": "日期选择"
                 }, {
@@ -1041,12 +1082,13 @@
                 }, {
                     "name": "用法"
                 }],
-                "filter": "riqixuanze rqxz"
+                "filter": "riqixuanze rqxz time shijian sj"
             }, {
                 "id": "chosen",
                 "icon": "icon-search",
                 "desc": "提供数据选择和筛选功能",
                 "name": "Chosen",
+                "update": "1.6.0",
                 "topics": [{
                     "name": "示例"
                 }, {
@@ -1054,13 +1096,13 @@
                 }, {
                     "name": "图标选择插件"
                 }],
-                "filter": ""
+                "filter": "select xialaxuanze xlxz option choose"
             }, {
                 "id": "htmleditor",
                 "icon": "icon-edit",
                 "desc": "使用 Kineditor 或 UEditor 来编辑富文本",
                 "name": "富文本编辑器",
-                "update": "1.5.0",
+                "update": "1.6.0",
                 "dpds": "kindeditor",
                 "topics": [{
                     "name": "UEditor"
@@ -1086,6 +1128,7 @@
                 "desc": "拖动目标元素",
                 "name": "拖动",
                 "version": "1.5.0",
+                "update": "1.6.0",
                 "topics": [{
                     "name": "综合示例"
                 }, {
@@ -1099,7 +1142,7 @@
                 "icon": "icon-external-link",
                 "desc": "拖动并放置在目标位置",
                 "name": "拖放",
-                "update": "1.5.0",
+                "update": "1.6.0",
                 "topics": [{
                     "name": "综合示例"
                 }, {
@@ -1114,6 +1157,7 @@
                 "desc": "拖动元素来排列顺序",
                 "name": "拖放排序",
                 "version": "1.5.0",
+                "update": "1.6.0",
                 "topics": [{
                     "name": "综合示例"
                 }, {
@@ -1128,6 +1172,7 @@
                 "desc": "通过拖拽来选择元素",
                 "name": "拖拽选取",
                 "version": "1.5.0",
+                "update": "1.6.0",
                 "topics": [{
                     "name": "综合示例"
                 }, {
@@ -1145,6 +1190,7 @@
                 "desc": "从下拉菜单中选择预设的颜色值",
                 "name": "颜色选择器",
                 "version": "1.5.0",
+                "update": "1.6.0",
                 "topics": [{
                     "name": "按钮选择器"
                 }, {
@@ -1201,9 +1247,11 @@
                 "icon": "icon-th-list",
                 "desc": "体现层级关系的树形菜单",
                 "name": "树形菜单",
-                "update": "1.5.0",
+                "update": "1.6.0",
                 "topics": [{
                     "name": "综合示例"
+                }, {
+                    "name": "树形导航菜单"
                 }, {
                     "name": "外观选项"
                 }, {
@@ -1217,7 +1265,7 @@
                 "icon": "icon-table",
                 "desc": "可以固定列和表头的增强表格",
                 "name": "数据表格",
-                "update": "1.5.0",
+                "update": "1.6.0",
                 "topics": [{
                     "name": "简单应用"
                 }, {
@@ -1241,8 +1289,28 @@
                 "icon": "icon-cloud-upload",
                 "name": "文件上传",
                 "desc": "提供文件管理和大文件批量上传功能。",
-                "update": "1.6.0",
-                "topics": [],
+                "version": "1.6.0",
+                "topics": [{
+                    "name": "综合示例"
+                }, {
+                    "name": "使用"
+                }, {
+                    "name": "选项"
+                }, {
+                    "name": "对象和属性"
+                }, {
+                    "name": "方法"
+                }, {
+                    "name": "事件"
+                }, {
+                    "name": "自定义 UI"
+                }, {
+                    "name": "处理服务器结果"
+                }, {
+                    "name": "使用七牛 JavaScript SDK"
+                }, {
+                    "name": "获取 plupload 对象"
+                }],
                 "filter": "wenjiangshangchuan wjsc file"
             }, {
                 "id": "calendar",
@@ -1290,7 +1358,7 @@
                 "icon": "icon-file-text-alt",
                 "desc": "用于展示带标题和其他额外信息的图文内容",
                 "name": "文章",
-                "update": "1.5.0",
+                "update": "1.6.0",
                 "topics": [{
                     "name": "结构"
                 }, {
@@ -1354,6 +1422,7 @@
                 "icon": "icon-bar-chart",
                 "desc": "展示曲线图和饼图",
                 "name": "图表",
+                "update": "1.6.0",
                 "topics": [{
                     "name": "创建图表"
                 }, {
@@ -1387,7 +1456,7 @@
                 "icon": "icon-th-large",
                 "desc": "支持拖放调整位置的面板网格",
                 "name": "仪表盘",
-                "update": "1.5.0",
+                "update": "1.6.0",
                 "topics": [{
                     "name": "使用示例"
                 }, {

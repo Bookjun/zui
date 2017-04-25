@@ -9,7 +9,7 @@
 
 从官方网站了解更多： http://zui.sexy/ 。
 
-💎 &nbsp;为移动端设计，基于 Flex 的 UI 框架： [![MZUI](https://img.shields.io/badge/%E6%8E%A8%E8%8D%90-MZUI-3280fc.svg?style=flat-square)](http://zui.sexy/m/)。
+💎 &nbsp;为移动端设计，基于 Flex 的 UI 框架： [MZUI](http://zui.sexy/m/)。
 
 ## 特色
 
@@ -41,12 +41,12 @@ bower install zui
 
 ```html
 <!-- ZUI 标准版压缩后的 CSS 文件 -->
-<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/zui/1.5.0/css/zui.min.css">
+<link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/zui/1.6.0/css/zui.min.css">
 
 <!-- ZUI Javascript 依赖 jQuery -->
-<script src="//cdnjs.cloudflare.com/ajax/libs/zui/1.5.0/lib/jquery/jquery.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/zui/1.6.0/lib/jquery/jquery.js"></script>
 <!-- ZUI 标准版压缩后的 JavaScript 文件 -->
-<script src="//cdnjs.cloudflare.com/ajax/libs/zui/1.5.0/js/zui.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/zui/1.6.0/js/zui.min.js"></script>
 ```
 
 其他 CDN:
@@ -55,8 +55,8 @@ bower install zui
 
 ### 下载
 
- - [v 1.5.0 生产包](https://github.com/easysoft/zui/releases/download/v1.5.0/zui-1.5.0-dist.zip)
- - [v 1.5.0 源码](https://github.com/easysoft/zui/archive/v1.5.0.zip)
+ - [v 1.6.0 生产包](https://github.com/easysoft/zui/releases/download/v1.6.0/zui-1.6.0-dist.zip)
+ - [v 1.6.0 源码](https://github.com/easysoft/zui/archive/v1.6.0.zip)
 
 ### 文档
 

@@ -17,7 +17,24 @@ filter: shujubiaoge sjbg
   </ul>
 </div>
 
+数据表格的主要思路是将一个表格的列在水平方向上分为三部分（以下称为称左侧列，中间列和右侧列），他们分别有如下特性：
+
+* 左侧列：所有左侧列的总宽度可以设置为表格的百分比或一个固定宽度，但设定后，不允许再次改变，左侧列中的所有列宽表现与普通表格一致，你可以单独设置某一列的宽度，其他列会自适应，推荐除了一个列宽设置为 auto，其他列都设置为固定列宽。
+* 右侧列：右侧列的行为与中间列一致；
+* 中间列：所有中间列的总宽度需要指定，最小值为表格宽度减去左侧列和右侧列宽度，超过最小值则允许水平滚动中间列（**也就是说如果需要中间的所有列水平滚动则需要保证中间所有列的宽度总和超过中间区域宽度**）。
+
 ## 简单应用
+
+### 引入资源
+
+数据表格为独立组件，你需要从本地或 CDN 单独引入 lib 目录下的资源：
+
+```html
+<link href="lib/datatable/zui.datatable.min.css" rel="stylesheet">
+<script src="lib/datatable/zui.datatable.min.js"></script>
+```
+
+### 例子
 
 在下面的例子中，表格左侧5列和右侧两列分别固定在两侧，其宽度不受外部容器宽度影响，中间位置的列则在宽度不够时会隐藏超出的部分，隐藏的列可以通过拖拽表头移动到可视区域，也可以使用下方的滚动条来调整隐藏的列显示区域。当向下滚动页面时，如果表头一旦处于不可见的位置时，则表头会调整样式而固定在页面顶端保持一直可见。
 
@@ -25,7 +42,7 @@ filter: shujubiaoge sjbg
   <div class="datatable"></div>
 </div>
 
-```
+```html
 <!-- HTML 代码 -->
 <table class="table datatable">
   <thead>
@@ -52,7 +69,7 @@ filter: shujubiaoge sjbg
 </table>
 ```
 
-```
+```js
 /* 初始化数据表格 */
 $('table.datatable').datatable();
 ```
@@ -65,10 +82,8 @@ $('table.datatable').datatable();
   <div class="datatable" data-sortable="true"></div>
 </div>
 
-```
-/* JS 代码 */
+```js
 $('table.datatable').datatable({sortable: true});
-
 ```
 
 ## 高亮选中行
@@ -77,10 +92,8 @@ $('table.datatable').datatable({sortable: true});
   <div class="datatable" data-checkable="true"></div>
 </div>
 
-```
-/* JS 代码 */
+```js
 $('table.datatable').datatable({checkable: true});
-
 ```
 
 ## 综合示例
@@ -91,10 +104,8 @@ $('table.datatable').datatable({checkable: true});
   <div class="datatable" data-checkable="true" data-sortable="true"></div>
 </div>
 
-```
-/* JS 代码 */
+```js
 $('table.datatable').datatable({checkable: true, sortable: true});
-
 ```
 
 ## 选项
@@ -141,7 +152,7 @@ $('table.datatable').datatable({checkable: true, sortable: true});
       <td>`fixedHeader`</td>
       <td>*   `false` (默认)
 *   `true`</td>
-      <td>是否固定表格头部，如果启用当页面滚动到下方导致表头不可见时重新定位表头到页面顶部保持可见</td>
+      <td>是否固定表格头部，如果启用当页面滚动到下方导致表头不可见时重新定位表头到页面顶部保持可见。<span class="text-warning">固定头部是相对页面 `<body>` 元素，如果数据表格已经在一个已被固定的元素中，此功能可能无法生效。</span></td>
     </tr>
     <tr>
       <td>`fixedHeaderOffset`</td>
@@ -222,8 +233,7 @@ $('table.datatable').datatable({checkable: true, sortable: true});
   </tbody>
 </table>
 
-```
-/* JS 代码 */
+```js
 $('table.datatable').datatable({
     checkable: true,
     sortable: true,
@@ -231,7 +241,6 @@ $('table.datatable').datatable({
     minFixedLeftWidth: 300
     // 更多参数...
 });
-
 ```
 
 选项也可以直接使用`data-*`属性写在要增强的HTML标签上。
@@ -290,7 +299,7 @@ Datatable中的事件既可以使用jQuery原生方法来绑定，也可以写�
 
 #### 使用选项处理事件
 
-```
+```js
 $('table.datatable').datatable({
     sort: function(event) {
         console.log(event);
@@ -303,7 +312,7 @@ $('table.datatable').datatable({
 
 #### 使用jQuery方法绑定事件处理函数
 
-```
+```js
 $('table.datatable').datatable().on("sort.zui.datatable", function(event) {
     console.log(event);
     // console.log("表格已重新排序！");
@@ -316,7 +325,7 @@ $('table.datatable').datatable().on("sort.zui.datatable", function(event) {
 
 当 `checkable` 选项被启用时可以使用数据表格实例上的 `checks` 属性来获取当前已选择行的状态。
 
-```javascript
+```js
 // 获取数据表格实例对象
 var myDatatable = $('table.datatable').data('zui.datatable');
 
@@ -335,7 +344,7 @@ var checksStatus = myDatatable.checks;
 
 直接对一个包含完整头部和数据的普通表格进行增强。DataTable或自动获取所有表头和行上的数据，并配置相关选项。
 
-```
+```html
 <!-- 使用Datatable来增强下面的原生表格 -->
 <table class="table datatable">
   <!-- 定义表头 -->
@@ -356,7 +365,7 @@ var checksStatus = myDatatable.checks;
 </table>
 ```
 
-```
+```js
 /* 初始化数据表格 */
 $('table.datatable').datatable(options);
 ```
@@ -369,12 +378,12 @@ $('table.datatable').datatable(options);
 
 通过设置启动选项的`data`属性来初始化数据。
 
-```
+```html
 <!-- 使用一个div来显示数据表格 -->
 <div class="datatable" data-checkable="true" data-sortable="true"></div></code>
 ```
 
-```
+```js
 /* 使用选项选项来初始化数据 */
 $('table.datatable').datatable({
     data: {
@@ -397,7 +406,7 @@ $('table.datatable').datatable({
 
 一个完整的数据包含列定义和行数据。类定义在javascript代码中为一个数组，在DOM中为`thead`中的`tr`标签。行数据在javascript中为一个数组，在DOM中为`tbody`中的`td`标签。
 
-```
+```js
 {
     // 列定义
     cols: [
@@ -521,7 +530,7 @@ $('table.datatable').datatable({
   <button class="btn btn-primary" type="button" id="datatableChangeBtn">更新评分</button>
 </div>
 
-```
+```js
 // 更改原始表格数据内容
 $('table.datatable-origin').find('td.data-for-change').text('更新此单元格');
 
@@ -529,7 +538,7 @@ $('table.datatable-origin').find('td.data-for-change').text('更新此单元格'
 $('table.datatable').datatable('load');
 ```
 
-```
+```js
 // 使用data参数更新数据：
 $('table.datatable').datatable('load', {
     cols: [
@@ -545,7 +554,7 @@ $('table.datatable').datatable('load', {
 });
 ```
 
-```
+```js
 // 使用data参数可以使用一个回调函数来修改之前的数据：
 $('table.datatable').datatable('load', function(data) {
     // 修改第1行的第3列数据值为'新的名称示例1'
@@ -553,8 +562,6 @@ $('table.datatable').datatable('load', function(data) {
     // 更多的修改...
 });
 ```
-
-
 
 <script>
 function onPageLoad() {

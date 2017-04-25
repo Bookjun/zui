@@ -1,8 +1,8 @@
 /*!
- * ZUI: Document - v1.5.0 - 2016-12-11
+ * ZUI: Document - v1.6.0 - 2017-03-16
  * http://zui.sexy
  * GitHub: https://github.com/easysoft/zui.git 
- * Copyright (c) 2016 cnezsoft.com; Licensed MIT
+ * Copyright (c) 2017 cnezsoft.com; Licensed MIT
  */
 
 .icon-10x {
@@ -91,6 +91,36 @@ pre em {
   }
 pre:hover em {
   background-color: #ffe5e0;
+  }
+pre > code:before {
+  position: absolute;
+  top: 4px;
+  right: 4px;
+  display: inline-block;
+  padding: 0 4px;
+  font-size: 12px;
+  line-height: 16px;
+  color: #fff;
+  pointer-events: none;
+  background-color: #bbb;
+  background-color: rgba(0, 0, 0, .15);
+  border-radius: 2px;
+  -webkit-transition: opacity .2s;
+       -o-transition: opacity .2s;
+          transition: opacity .2s;
+  }
+pre:hover > code:before {
+  opacity: 0;
+  }
+pre > code.lang-javascript:before,
+pre > code.lang-js:before {
+  content: 'javascript';
+  }
+pre > code.lang-html:before {
+  content: 'html';
+  }
+pre > code.lang-css:before {
+  content: 'css';
   }
 pre.linenums {
   padding: 10px;

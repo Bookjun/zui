@@ -23,7 +23,7 @@ filter: duihuakuangchufaqi dhkcfq motaikuang mtk
   <button type="button" class="btn btn-primary" data-remote="docs/partial/remote-modal.html" data-toggle="modal">Ajax对话框</button>
 </div>
 
-```
+```html
 <!-- 使用data-remote属性 -->
 <button type="button" class="btn btn-primary" data-remote="partial/remote-modal.html" data-toggle="modal">Ajax对话框</button>
 
@@ -41,7 +41,7 @@ filter: duihuakuangchufaqi dhkcfq motaikuang mtk
   <button type="button" class="btn btn-primary" data-waittime="5000" data-iframe="docs/partial/iframe-modal.html" data-toggle="modal" data-loading-icon="icon-spinner-snake" data-height="300">iframe对话框</button>
 </div>
 
-```
+```html
 <!-- 使用data-iframe属性 -->
 <button type="button" class="btn btn-primary" data-iframe="partial/iframe-modal.html" data-toggle="modal">iframe对话框</button>
 
@@ -61,12 +61,12 @@ filter: duihuakuangchufaqi dhkcfq motaikuang mtk
       <button type="button" class="btn btn-primary" data-custom="<h1>此内容是自定义的</h1><p>哈哈:)</p>" data-toggle="modal">指定内容文本</button>
     </div>
 
-```
+```html
 <!-- 使用data-custom 属性 -->
 <button type="button" class="btn btn-primary" data-custom="此内容是自定义的:)" data-toggle="modal">指定内容文本</button>
 ```
 
-```
+```js
 /* 使用Javascript方法绑定在按钮上触发 */
 $('#triggerButton').modalTrigger({custom: '<h1>此内容是自定义的</h1><p>哈哈:)</p>'});
 
@@ -86,12 +86,12 @@ $('#triggerButton').modalTrigger({custom: '<h1>此内容是自定义的</h1><p>�
   <button type="button" class="btn btn-primary" data-custom="#myModalAlert" data-toggle="modal">指定页面元素的内容</button>
 </div>
 
-```
+```html
 <!-- 使用data-custom 属性 -->
 <button type="button" class="btn btn-primary" data-custom="#myModalAlert" data-toggle="modal">指定页面元素的内容</button>
 ```
 
-```
+```js
 /* 使用Javascript方法绑定在按钮上触发 */
 $('#triggerButton').modalTrigger({custom: '#myModalAlert'});
 
@@ -103,7 +103,7 @@ $('#triggerButton').modalTrigger({custom: '#myModalAlert'});
 
 直接为custom参数赋值为一个jQuery对象，此对象的内容将显示在对话框中。此方式无法使用data属性调用。
 
-```
+```js
 /* 使用Javascript方法绑定在按钮上触发 */
 $('#triggerButton').modalTrigger({custom: $('#myModalAlert')});
 
@@ -121,7 +121,7 @@ $('#triggerButton').modalTrigger({custom: $('#myModalAlert')});
   <button type="button" class="btn btn-primary" id="modalTriggerByFunc">使用函数生成内容</button>
 </div>
 
-```
+```js
 /* 使用Javascript方法绑定在按钮上触发 */
 $('#triggerButton').modalTrigger({custom: function() {
     return "当对话框显示时，时间是：" + (new Date).toString();
@@ -151,7 +151,7 @@ $('#triggerButton').modalTrigger({custom: function() {
   <button type="button" class="btn btn-primary" data-custom="<h1>这是一个全屏对话框示例</h1>" data-toggle="modal" data-size="fullscreen">全屏对话框</button>
 </div>
 
-```
+```html
 <button type="button" class="btn btn-primary" data-custom="..." data-toggle="modal" data-size="fullscreen">全屏对话框</button>
 ```
 
@@ -165,12 +165,12 @@ $('#triggerButton').modalTrigger({custom: function() {
   <button type="button" class="btn btn-primary" data-toggle="modal" data-custom="这个对话框不显示头部" data-show-header="false" id="modalTriggerByFunc">不显示头部</button>
 </div>
 
-```
+```html
 <!-- 使用data-showHeader 属性 -->
 <button type="button" class="btn btn-primary" data-show-header="false" data-toggle="modal">不显示头部</button>
 ```
 
-```
+```js
 /* 使用Javascript方法绑定在按钮上触发 */
 $('#triggerButton').modalTrigger({showHeader: false});
 
@@ -184,12 +184,12 @@ $('#triggerButton').modalTrigger({showHeader: false});
 
 <div class="example"><button type="button" class="btn btn-primary" data-toggle="modal" data-custom="此对话框的标题是新的" data-title="新的标题很重要" id="modalTriggerByFunc">自定义标题</button></div>
 
-```
+```html
 <!-- 使用data-title 属性 -->
 <button type="button" class="btn btn-primary" data-title="新的标题" data-toggle="modal">不显示头部</button>
 ```
 
-```
+```js
 /* 使用Javascript方法绑定在按钮上触发 */
 $('#triggerButton').modalTrigger({title: '新的标题'});
 
@@ -205,12 +205,12 @@ $('#triggerButton').modalTrigger({title: '新的标题'});
 
 <div class="example"><button type="button" class="btn btn-primary" data-toggle="modal" data-custom="此对话框标题包含一个图标" data-icon="heart" data-title="图标很重要" id="modalTriggerByFunc">看看图标是什么</button></div>
 
-```
+```html
 <!-- 使用data-title 属性 -->
 <button type="button" class="btn btn-primary" data-icon="heart" data-toggle="modal">不显示头部</button>
 ```
 
-```
+```js
 /* 使用Javascript方法绑定在按钮上触发 */
 $('#triggerButton').modalTrigger({icon: 'heart'});
 
@@ -226,7 +226,7 @@ $('#triggerButton').modalTrigger({icon: 'heart'});
   <button type="button" class="btn btn-primary" data-icon="move" data-moveable="true" data-toggle="modal" data-custom="<div><p>拖动我的头部来移动此对话框。</p><h1>:)</h1></div>" id="modalTriggerMoveable"><i class="icon icon-move"></i> 打开我 拖动我</button>
 </div>
 
-```
+```html
 <button type="button" class="btn btn-primary" data-moveable="true" data-toggle="modal" data-custom="..."><i class="icon icon-move"></i> 打开我 拖动我</button>
 ```
 
@@ -246,7 +246,7 @@ Javascript方法也十分灵活。
 
 使得一个jquery对象能够监听事件（一般为点击）并启动对话框。
 
-```
+```js
 $('#triggerButton').modalTrigger(options);
 ```
 
@@ -256,7 +256,7 @@ $('#triggerButton').modalTrigger(options);
 
 在`$.zui`对象上已默认绑定了一个对话框触发器对象，可以直接使用`方法`并传递不同的参数来随时启动对话框。
 
-```
+```js
 $.zui.modalTrigger.show(options);
 ```
 
@@ -264,7 +264,7 @@ $.zui.modalTrigger.show(options);
 
 创建一个新的对话框触发器来保存配置并启动对话框。
 
-```
+```js
 var myModalTrigger = new $.zui.ModalTrigger(options);
 myModalTrigger.show();
 ```
@@ -283,6 +283,18 @@ myModalTrigger.show();
     </tr>
   </thead>
   <tbody>
+    <tr>
+      <td>`name`</td>
+      <td>对话框元素名称</td>
+      <td>可选，默认为 `'triggerModal'`</td>
+      <td>该名称会作为内部表示此触发器实例使用，并且会作为最终生成的 `.modal` 元素的 ID 属性</td>
+    </tr>
+    <tr>
+      <td>`className`</td>
+      <td>对话框元素类名</td>
+      <td>可选，默认为 `''`</td>
+      <td>添加到最终生成的 `.modal` 元素的 CLASS 属性上</td>
+    </tr>
     <tr>
       <td>`type`</td>
       <td>对话框类型</td>
@@ -391,6 +403,14 @@ myModalTrigger.show();
       <td>是否启用对话框拖拽移动功能</td>
     </tr>
     <tr>
+      <td>`rememberPos`</td>
+      <td>记住移动的位置</td>
+      <td>*   `false`（默认），不记住位置；
+*   `true`，记住位置；
+*   页面内值唯一的字符串，使用本地存储记住位置；</td>
+      <td>启用该选项需要同时启用 `moveable` 选项，当该值为一个在页面范围内值唯一的字符串时，通过浏览器本地存储来存储数据，关闭页面或浏览器之后也不会忘记。</td>
+    </tr>
+    <tr>
       <td>`waittime`</td>
       <td>加载远程内容时的最大等待时间</td>
       <td>整数，代表等待的毫秒数，默认为`0`</td>
@@ -414,19 +434,19 @@ myModalTrigger.show();
 
 ##### 通过触发按钮的data属性
 
-```
+```js
 var modalTrigger = $('#triggerButton').data('zui.modaltrigger');
 ```
 
 ##### 使用预设的$.zui对象绑定的触发器
 
-```
+```js
 var myTrigger = $.zui.modalTrigger;
 ```
 
 ##### 创建新的触发器实例
 
-```
+```js
 var newTrigger = new $.zui.ModalTrigger(options);
 ```
 
@@ -434,13 +454,13 @@ var newTrigger = new $.zui.ModalTrigger(options);
 
 在显示对话框时，可以重新传入新的参数，而不影响触发器对象原来的参数。
 
-```
+```js
 myModalTrigger.show(options);
 ```
 
 ### 关闭对话框
 
-```
+```js
 myModalTrigger.close();
 ```
 
@@ -450,7 +470,7 @@ myModalTrigger.close();
 
 在切换显示和关闭状态时，可以重新传入新的参数，而不影响触发器对象原来的参数。
 
-```
+```js
 myModalTrigger.toggle(options);
 ```
 
@@ -458,7 +478,7 @@ myModalTrigger.toggle(options);
 
 使用新的位置参数来重新设置对话框的显示位置。
 
-```
+```js
 myModalTrigger.ajustPosition(options);
 ```
 
@@ -508,7 +528,7 @@ myModalTrigger.ajustPosition(options);
   </tbody>
 </table>
 
-```
+```js
 myModalTrigger.show({shown: function() {
     alert('对话框已显示。');
 }});
@@ -516,7 +536,7 @@ myModalTrigger.show({shown: function() {
 
 如果对话框的`name`参数是已知的，则可以获取对话框的jquery对象实例通过jQuery对象的on方法来绑定事件。
 
-```
+```js
 $('#triggerModal').on('shown.zui.modal', function() {...});
 ```
 

@@ -41,7 +41,7 @@ filter: tupianjianqie tpjq cj caijian
   </div>
 </div>
 
-```
+```html
 <!-- HTML结构 -->
 <div class="img-cutter" id="imgCutter">
   <div class="canvas"><img src="image.jpg" alt=""></div>
@@ -52,7 +52,7 @@ filter: tupianjianqie tpjq cj caijian
 </div>
 ```
 
-```
+```js
 // 通过Javascript初始化
 $('#imgCutter').imgCutter(options);
 ```
@@ -122,7 +122,7 @@ $('#imgCutter').imgCutter(options);
   </tbody>
 </table>
 
-```
+```js
 // 使用选项
 $("#imgCutter").imgCutter({
     fixedRatio: true
@@ -208,7 +208,7 @@ $("#imgCutter").imgCutter({
 
 调用方法需要先获取插件实例。
 
-```javascript
+```js
 // 获取 imgCutter 实例
 var myImgCutter = $('#imgCutter').data('zui.imgCutter');
 
@@ -263,8 +263,8 @@ var myImgCutterData = myImgCutter.getData();
   </tbody>
 </table>
 
-<script src="../../dist/lib/imgcutter/zui.imgcutter.js"></script>
-<link rel="stylesheet" href="../../dist/lib/imgcutter/zui.imgcutter.css">
+<script src="dist/lib/imgcutter/zui.imgcutter.js"></script>
+<link rel="stylesheet" href="dist/lib/imgcutter/zui.imgcutter.css">
 <script>
 function afterPageLoad() {
     var $imgCutterInfo = $('.img-cutter-info');

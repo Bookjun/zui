@@ -256,7 +256,7 @@ filter: yibiaopan ybp panel mianban mb
 </div>
 ```
 
-```javascript
+```js
 $('#dashboard').dashboard({draggable: true});
 ```
 
@@ -351,7 +351,7 @@ $('#dashboard').dashboard({draggable: true});
 
 使用选项：
 
-```javascript
+```js
 // 定义选项对象
 var options = {
     height: 400,
@@ -430,7 +430,7 @@ $('#dashboard').dashboard(options)
 <div class="dashboard" id="myDashboard"></div>
 ```
 
-```javascript
+```js
 // 定义所有面板的配置对象数组
 var data = [{
     id: 'panel1',   // 面板编号
@@ -473,7 +473,7 @@ $('#myDashboard').dashboard({data: data});
 
 `afterPanelRemoved` 回调函数在面板被移除时调用，该回调函数包含一个参数 `id`，指示当前被移除的面板 ID。
 
-```
+```js
 $('#myDashboard').dashboard{
     afterPanelRemoved: function(id) {
         console.log('编号为', id, '的面板被移除。');
@@ -487,7 +487,7 @@ $('#myDashboard').dashboard{
 
 `newOrders` 参数为一个对象，其属性名称为面板变化，其值为对应面板的显示顺序。
 
-```
+```js
 $('#myDashboard').dashboard{
     afterOrdered: function(newOrders) {
         console.log('当前面板被重新排序，新的顺序为', newOrders);
@@ -507,7 +507,7 @@ $('#myDashboard').dashboard{
 
 通过在回调函数内调用 `e.revert()` 可以撤销栅格变更操作，也可以在回调函数内返回 `false` 来实现撤销操作。
 
-```
+```js
 $('#myDashboard').dashboard{
     onResize: function(e) {
         console.log('当前面板栅格大小被更改为', e.grid);
@@ -572,7 +572,7 @@ $('#myDashboard').dashboard{
  - `e.result`：指示远程请求操作是否执行成功；
  - `e.data`：从远处获取到的用于更新面板的内容。
 
-```
+```js
 $('#myDashboard').dashboard{
     afterRefresh: function(e) {
         console.log('从远程更新的结果为', e.true);
@@ -591,7 +591,7 @@ $('#myDashboard').dashboard{
 
 其中 `panel` 参数使用 CSS 选择器指定为需要进行更新的面板（`.panel`）对象；`onlyRefreshBody` 参数为布尔值，指定是否仅仅使用远程内容来更新 `.panel-body` 元素。
 
-```javascript
+```js
 // 获取仪表盘实例
 var myDashboard = $('#myDashboard').data('zui.dashboard');
 
